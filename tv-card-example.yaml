@@ -1,0 +1,59 @@
+type: custom:tv-card
+entity: remote.z6x
+tv: true
+left:
+  service: remote.send_command
+  service_data:
+    command: left
+    entity_id: remote.z6x
+right:
+  service: remote.send_command
+  service_data:
+    command: right
+    entity_id: remote.z6x
+up:
+  service: remote.send_command
+  service_data:
+    command: up
+    entity_id: remote.z6x
+down:
+  service: remote.send_command
+  service_data:
+    command: down
+    entity_id: remote.z6x
+select:
+  service: remote.send_command
+  service_data:
+    command: play
+    entity_id: remote.z6x
+back:
+  service: remote.send_command
+  service_data:
+    command: back
+    entity_id: remote.z6x
+volume_up:
+  service: remote.send_command
+  service_data:
+    command: volumeup
+    entity_id: remote.z6x
+volume_down:
+  service: remote.send_command
+  service_data:
+    command: volumedown
+    entity_id: remote.z6x
+volume_mute:
+  service: remote.send_command
+  service_data:
+    command: volumemute
+    entity_id: remote.z6x
+power:
+  service: remote.send_command
+  service_data:
+    command: power
+    entity_id: remote.z6x
+home:
+  service: remote.send_command
+  service_data:
+    command: home
+    entity_id: remote.z6x
+
