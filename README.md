@@ -8,8 +8,8 @@ XGIMI integration for home assistant
     ```yaml
     remote:
     - platform: xgimi
-        name: z6x  # can be changed with any name you like
-        host: 192.168.0.115  # your xgimi projector IP
+      name: z6x  # can be changed with any name you like
+      host: 192.168.0.115  # your xgimi projector IP
     ```
 4. Restart home assistant
 
