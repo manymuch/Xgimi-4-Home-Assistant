@@ -1,16 +1,20 @@
 import asyncudp
 import asyncio
+from bluez_peripheral.util import Adapter, get_message_bus
+from bluez_peripheral.advert import Advertisement
 
 
 class XgimiApi:
-    def __init__(self, ip, command_port, advance_port, alive_port) -> None:
+    def __init__(self, ip, command_port, advance_port, alive_port, manufacturer_data) -> None:
         self.ip = ip
         self.command_port = command_port  # 16735
         self.advance_port = advance_port  # 16750
         self.alive_port = alive_port  # 554
+        self.manufacturer_data = manufacturer_data
         self._is_on = False
 
         self._command_dict = {
+            "ok": "KEYPRESSES:49",
             "play": "KEYPRESSES:49",
             "pause": "KEYPRESSES:49",
             "power": "KEYPRESSES:116",
@@ -45,14 +49,39 @@ class XgimiApi:
         except Exception:
             self._is_on = False
 
+    async def async_ble_power_on(self, manufacturer_data: str, company_id: int = 0x0046, service_uuid: str = "1812"):
+        bus = await get_message_bus()
+        adapter = await Adapter.get_first(bus)
+        advert = Advertisement(
+            localName="Bluetooth 4.0 RC",
+            serviceUUIDs=[service_uuid],
+            manufacturerData={company_id: bytes.fromhex(manufacturer_data)},
+            timeout=15,
+            duration=15,
+            appearance=0,
+        )
+        await advert.register(bus, adapter)
+        await asyncio.sleep(15)
+        bus.disconnect()
+        await bus.wait_for_disconnect()
+
+
     async def async_send_command(self, command) -> None:
         """Send a command to a device."""
         if command in self._command_dict:
+            if command == "poweroff":
+                self._is_on = False
             msg = self._command_dict[command]
             remote_addr = (self.ip, self.command_port)
+            sock = await asyncudp.create_socket(remote_addr=remote_addr)
+            sock.sendto(msg.encode("utf-8"))
+            sock.close()
+        elif command == "poweron":
+            self._is_on = True
+            await self.async_ble_power_on(self.manufacturer_data)
         else:
             msg = self._advance_command.replace("command_holder", command)
             remote_addr = (self.ip, self.advance_port)
-        sock = await asyncudp.create_socket(remote_addr=remote_addr)
-        sock.sendto(msg.encode("utf-8"))
-        sock.close()
+            sock = await asyncudp.create_socket(remote_addr=remote_addr)
+            sock.sendto(msg.encode("utf-8"))
+            sock.close()

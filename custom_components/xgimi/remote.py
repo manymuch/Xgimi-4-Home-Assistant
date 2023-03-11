@@ -1,7 +1,7 @@
 """Support for the Xgimi Projector."""
 
 from collections.abc import Iterable
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from .pyxgimi import XgimiApi
 import asyncio
 
@@ -17,8 +17,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # If a hostname is set. Discovery is skipped.
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
+    token = config.get(CONF_TOKEN)
 
-    xgimi_api = XgimiApi(host, 16735, 16750, 554)
+    xgimi_api = XgimiApi(ip=host, command_port=16735, advance_port=16750, alive_port=554,
+                         manufacturer_data=token)
     async_add_entities([XgimiRemote(xgimi_api, name)])
 
 
@@ -53,18 +55,14 @@ class XgimiRemote(RemoteEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the Xgimi Projector On."""
         # Do the turning on.
-        await self.xgimi_api.async_send_command("power")
-        await self.async_update()
+        await self.xgimi_api.async_send_command("poweron")
 
     async def async_turn_off(self, **kwargs):
         """Turn the Xgimi Projector Off."""
         # Do the turning off.
         await self.xgimi_api.async_send_command("poweroff")
-        await asyncio.sleep(10)
-        await self.async_update()
 
     async def async_send_command(self, command: Iterable[str], **kwargs) -> None:
         """Send a command to one of the devices."""
         for single_command in command:
             await self.xgimi_api.async_send_command(single_command)
-        await self.async_update()

@@ -10,6 +10,7 @@ XGIMI integration for home assistant
     - platform: xgimi
       name: z6x  # can be changed with any name you like
       host: 192.168.0.115  # your xgimi projector IP
+      token: "12D7C7899B9F80FFFFFF3043524B544D"  # BLE manufacture data
     ```
 4. Restart home assistant
 
@@ -26,21 +27,20 @@ target:
 Current support command:  
 ```
 play, pause, power, back, home, menu, right, left
-up, down, volumedown, volumeup, poweroff, volumemute
+up, down, volumedown, volumeup, poweron, poweroff, volumemute
 ```
 ### Dashboard example
 See [tv-card-example.yaml](tv-card-example.yaml) for a dashboard example using [tv-card](https://github.com/marrobHD/tv-card)
 
-## Limitation
-There is no way to **power on** the xgimi projector through this integration.
-The integration communicates with xigimi projector by UDP, once the projector is powered off, the only way to wake it up is using the bluetooth remote. However, I can not find any relevant threads about how to simulate the bluetooth remote.  
+## About Power-On with ble manufacture data
+The integration communicates with xigimi projector by UDP except for the **poweron** command. Once the projector is powered off, the only way to wake it up is sending a special ble advertisement. Such a ble advertisement contains a special token called `manufacture data`. The manufacture data seems to be different for each model. Please go through issue [#5](https://github.com/manymuch/Xgimi-4-Home-Assistant/issues/5) for better understanding and how you can get manufacture data of your projector.  
+The **poweron** command is in beta mode, it is not guaranteed to work every time. Please let me know if you have any issue with it.
 
 ## TODO
 - setup through UI
 - auto discovery  
 - media player entity
 - more command support  
-- publish a pyxgimi package
 
 
 This integration is in very early stage, contributions and suggestions are welcome!

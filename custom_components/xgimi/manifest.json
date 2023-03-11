@@ -1,10 +1,10 @@
 {
   "domain": "xgimi",
   "name": "Xgimi Projector Remote",
-  "version": "v0.0.1",
+  "version": "v0.0.2",
   "documentation": "https://github.com/manymuch/Xgimi-4-Home-Assistant",
   "issue_tracker": "https://github.com/manymuch/Xgimi-4-Home-Assistant/issues",
-  "requirements": ["asyncudp"],
+  "requirements": ["asyncudp", "bluez-peripheral"],
   "codeowners": [
     "@manymuch"
   ],
