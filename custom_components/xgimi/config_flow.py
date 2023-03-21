@@ -43,9 +43,9 @@ class XgimiConfigFLow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({
-                vol.Required(CONF_NAME): str,
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_TOKEN): str,
+                vol.Required(CONF_NAME, default=user_input.get(CONF_NAME, vol.UNDEFINED)): str,
+                vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, vol.UNDEFINED)): str,
+                vol.Required(CONF_TOKEN, default=user_input.get(CONF_TOKEN, vol.UNDEFINED)): str,
             }),
             errors=errors,
         )
