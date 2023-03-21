@@ -3,16 +3,17 @@
     "step": {
       "user": {
         "title": "Xgimi Projector Remote",
-        "description": "配置设备信息",
+        "description": "在配置之前，请确保电视已经打开。",
         "data": {
-          "name": "设备名称",
-          "host": "设备 IP",
+          "name": "电视名称",
+          "host": "电视 IP",
           "token": "蓝牙 Token"
         }
       }
     },
     "error": {
-      "invalid_host": "主机名错误"
+      "invalid_host": "IP错误",
+      "cannot_connect": "连接设备失败"
     },
     "abort": {
       "already_configured": "该设备已经配置过"
