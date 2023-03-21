@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Xgimi Projector Remote",
+        "description": "Configure device info",
+        "data": {
+          "name": "Device Name",
+          "host": "Device IP",
+          "token": "BLE Token"
+        }
+      }
+    },
+    "error": {
+      "invalid_host": "Invalid host"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
