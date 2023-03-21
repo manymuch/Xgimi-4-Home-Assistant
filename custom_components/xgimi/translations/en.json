@@ -2,17 +2,17 @@
   "config": {
     "step": {
       "user": {
-        "title": "Xgimi Projector Remote",
-        "description": "Configure device info",
+        "title": "Configure TV info",
+        "description": "Please make sure your TV turned on before trying to set it up.",
         "data": {
-          "name": "Device Name",
-          "host": "Device IP",
+          "name": "TV Name",
+          "host": "TV Host",
           "token": "BLE Token"
         }
       }
     },
     "error": {
-      "invalid_host": "Invalid host"
+      "invalid_host": "Invalid hostname or IP address"
     },
     "abort": {
       "already_configured": "Device is already configured"
