@@ -40,6 +40,8 @@ class XgimiConfigFLow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors[CONF_HOST] = "cannot_connect"
                 else:
                     return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+        else:
+            user_input = {}
 
         return self.async_show_form(
             step_id="user",
