@@ -1,7 +1,10 @@
 """Support for the Xgimi Projector."""
 
 from collections.abc import Iterable
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .pyxgimi import XgimiApi
 import asyncio
 
@@ -10,6 +13,25 @@ from homeassistant.components.remote import (
     RemoteEntity,
 )
 
+from .const import DOMAIN
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    config = hass.data[DOMAIN][config_entry.entry_id]
+    host = config[CONF_HOST]
+    name = config[CONF_NAME]
+    token = config[CONF_TOKEN]
+
+    unique_id = config_entry.unique_id
+    assert unique_id is not None
+
+    xgimi_api = XgimiApi(ip=host, command_port=16735, advance_port=16750, alive_port=554,
+                         manufacturer_data=token)
+    async_add_entities([XgimiRemote(xgimi_api, name, unique_id)])
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Xiaomi TV platform."""
