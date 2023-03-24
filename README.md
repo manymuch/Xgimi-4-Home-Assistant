@@ -4,15 +4,15 @@ XGIMI integration for home assistant
 ## Install
 1. Copy whole folder `xgimi` into home assistant `custom_components`  
 2. Restart home assistant  
-3. Add following lines to `configuration.yaml`  
-    ```yaml
-    remote:
-    - platform: xgimi
-      name: z6x  # can be changed with any name you like
-      host: 192.168.0.115  # your xgimi projector IP
-      token: "12D7C7899B9F80FFFFFF3043524B544D"  # BLE manufacture data
+3. Make sure your projector is powered on and connected to the same network as home assistant
+4. Add new integration, search fo xgimi
+5. Enter your projector information, for example:
+    ```bash
+    name: z6x
+    host: 192.168.0.115
+    token: 12D7C7899B9F80FFFFFF3043524B544D
     ```
-4. Restart home assistant
+
 
 ## How to use
 The integration setup up a remote entity: e.g. `remote.z6x`.  
@@ -37,7 +37,6 @@ The integration communicates with xigimi projector by UDP except for the **power
 The **poweron** command is in beta mode, it is not guaranteed to work every time. Please let me know if you have any issue with it.
 
 ## TODO
-- setup through UI
 - auto discovery  
 - media player entity
 - more command support  

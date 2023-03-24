@@ -1,6 +1,6 @@
 import asyncudp
 import asyncio
-from bluez_peripheral.util import Adapter, get_message_bus
+from bluez_peripheral.util import get_message_bus
 from bluez_peripheral.advert import Advertisement
 from time import time
 
@@ -64,19 +64,15 @@ class XgimiApi:
 
     async def async_ble_power_on(self, manufacturer_data: str, company_id: int = 0x0046, service_uuid: str = "1812"):
         bus = await get_message_bus()
-        adapter = await Adapter.get_first(bus)
         advert = Advertisement(
             localName="Bluetooth 4.0 RC",
             serviceUUIDs=[service_uuid],
             manufacturerData={company_id: bytes.fromhex(manufacturer_data)},
-            timeout=15,
-            duration=15,
+            timeout=10,
+            duration=500,
             appearance=0,
         )
-        await advert.register(bus, adapter)
-        await asyncio.sleep(15)
-        bus.disconnect()
-        await bus.wait_for_disconnect()
+        await advert.register(bus)
 
     async def async_send_command(self, command) -> None:
         """Send a command to a device."""
