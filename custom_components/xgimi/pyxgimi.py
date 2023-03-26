@@ -73,6 +73,7 @@ class XgimiApi:
             appearance=0,
         )
         await advert.register(bus)
+        await asyncio.sleep(10)
 
     async def async_send_command(self, command) -> None:
         """Send a command to a device."""
