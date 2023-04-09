@@ -15,6 +15,20 @@ from homeassistant.components.remote import (
 from .const import DOMAIN
 
 
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Xiaomi TV platform."""
+
+    # If a hostname is set. Discovery is skipped.
+    host = config.get(CONF_HOST)
+    name = config.get(CONF_NAME)
+    token = config.get(CONF_TOKEN)
+    unique_id = f"{name}-{token}"
+
+    xgimi_api = XgimiApi(ip=host, command_port=16735, advance_port=16750, alive_port=554,
+                         manufacturer_data=token)
+    async_add_entities([XgimiRemote(xgimi_api, name, unique_id)])
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,

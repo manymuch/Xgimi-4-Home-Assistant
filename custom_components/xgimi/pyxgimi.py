@@ -68,12 +68,16 @@ class XgimiApi:
             localName="Bluetooth 4.0 RC",
             serviceUUIDs=[service_uuid],
             manufacturerData={company_id: bytes.fromhex(manufacturer_data)},
-            timeout=10,
-            duration=500,
-            appearance=0,
+            timeout=1,
+            duration=1000,
+            appearance=961,
         )
         await advert.register(bus)
-        await asyncio.sleep(10)
+
+    async def async_robust_ble_power_on(self, manufacturer_data: str, company_id: int = 0x0046, service_uuid: str = "1812"):
+        for i in range(10):
+            await self.async_ble_power_on(manufacturer_data, company_id, service_uuid)
+            await asyncio.sleep(1)
 
     async def async_send_command(self, command) -> None:
         """Send a command to a device."""
@@ -89,7 +93,7 @@ class XgimiApi:
         elif command == "poweron":
             self._is_on = True
             self.last_on = time()
-            await self.async_ble_power_on(self.manufacturer_data)
+            await self.async_robust_ble_power_on(self.manufacturer_data)
         else:
             msg = self._advance_command.replace("command_holder", command)
             remote_addr = (self.ip, self.advance_port)
