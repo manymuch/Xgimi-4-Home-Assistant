@@ -1,6 +1,7 @@
-![image](https://github.com/manymuch/Xgimi-4-Home-Assistant/assets/20460749/6735f767-4c3e-462e-b746-d4eeebe3bc27)![image](https://github.com/manymuch/Xgimi-4-Home-Assistant/assets/20460749/3fd4c88f-1ed8-4e89-a27f-bb1776dd36d4)# Xgimi-4-Home-Assistant
+# Xgimi-4-Home-Assistant
 <img src="https://brands.home-assistant.io/xgimi/logo.png"  width="360" height="120">  
 XGIMI integration for home assistant
+
 
   
 ## 📦Install
