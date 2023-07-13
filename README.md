@@ -1,4 +1,4 @@
-# Xgimi-4-Home-Assistant
+![image](https://github.com/manymuch/Xgimi-4-Home-Assistant/assets/20460749/6735f767-4c3e-462e-b746-d4eeebe3bc27)![image](https://github.com/manymuch/Xgimi-4-Home-Assistant/assets/20460749/3fd4c88f-1ed8-4e89-a27f-bb1776dd36d4)# Xgimi-4-Home-Assistant
 <img src="https://brands.home-assistant.io/xgimi/logo.png"  width="360" height="120">  
 XGIMI integration for home assistant
 
@@ -16,12 +16,18 @@ Try these tokens for the following model.
 If that doesn't work or couldn't find your projector in the table, see for more details.
 |      model     	|               token              	|
 |:--------------:	|:--------------------------------:	|
-|       Z6X      	| 12D7C7899B9F80FFFFFF3043524B544D 	|
+|       H1S      	| 0ED8822F811CBCFFFFFF3043524B544D 	|
+|       H5      	| 4D4B17D86C27E0FFFFFF3043524B544D 	|
 |       H3       	| D1497DBDA42360FFFFFF3043524B544D 	|
 |       H3S      	| 39BCA0F7A3ADB4FFFFFF3043524B544D 	|
+|    New Z4 Air 	| 0917B18FCB2222FFFFFF3043524b544D 	|
+|       Z6X      	| 12D7C7899B9F80FFFFFF3043524B544D 	|
 |      Halo+     	| 143FCB9335F278FFFFFF3043524B544D 	|
 |      Elfin     	| 12D7C7899B9F80FFFFFF3043524B544D 	|
 | Horizon Pro 4K 	| 1A7E0C743AEF18FFFFFF3043524B544D 	|
+
+
+
 
 Choose a method to setup:
 ### Method A: manual setup
