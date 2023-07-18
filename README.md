@@ -64,7 +64,8 @@ target:
 Current support command:  
 ```
 play, pause, power, back, home, menu, right, left
-up, down, volumedown, volumeup, poweron, poweroff, volumemute
+up, down, volumedown, volumeup,
+poweron, poweroff, volumemute, autofocus
 ```
 
 ### Dashboard example
@@ -74,7 +75,7 @@ See [tv-card-example.yaml](assets/tv-card-example.yaml) for a dashboard example 
 
 ## About BLE token for Power-On
 
-The integration communicates with xigimi projector by UDP using local IP except for the **poweron** command. Once the projector is powered off, the only way to wake it up is sending a special ble advertisement. Such a ble advertisement contains a special token called `manufacture data`. The manufacture data seems to be different for each model.  
+The integration communicates with xgimi projector by UDP using local IP except for the **poweron** command. Once the projector is powered off, the only way to wake it up is sending a special ble advertisement. Such a ble advertisement contains a special token called `manufacture data`. The manufacture data seems to be different for each model.  
 
 Try the token in the table provided above, if no luck :-(, go through the following stet by step:  
 
@@ -112,8 +113,7 @@ Use [EFR connect](https://play.google.com/store/apps/details?id=com.siliconlabs.
 
 ## TODO
 - auto discovery  
-- media player entity  
-- more command support (e.g. auto-focus)  
+- media player entity   
 
 
 This integration is still in early stage, contributions and suggestions are welcome!  

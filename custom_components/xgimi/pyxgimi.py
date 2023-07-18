@@ -32,6 +32,7 @@ class XgimiApi:
             "volumeup": "KEYPRESSES:115",
             "poweroff": "KEYPRESSES:30",
             "volumemute": "KEYPRESSES:113",
+            "autofocus": "KEYPRESSES:2099"
         }
         self._advance_command = str({"action": 20000, "controlCmd": {"data": "command_holder",
                                     "delayTime": 0, "mode": 5, "time": 0, "type": 0}, "msgid": "2"})
