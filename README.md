@@ -26,7 +26,7 @@ If that doesn't work or couldn't find your projector in the table, see for more 
 |      Halo+     	| 143FCB9335F278FFFFFF3043524B544D 	|
 |      Elfin     	| 12D7C7899B9F80FFFFFF3043524B544D 	|
 | Horizon Pro 4K 	| 1A7E0C743AEF18FFFFFF3043524B544D 	|
-
+| Horizon (1080p) 	| 33D731E3B22440FFFFFF3043524B544D 	|
 
 
 
