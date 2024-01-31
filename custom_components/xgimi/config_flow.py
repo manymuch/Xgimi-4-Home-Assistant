@@ -11,7 +11,6 @@ from homeassistant.util.network import is_host_valid
 from .const import (
     DOMAIN,
 )
-from .pyxgimi import XgimiApi
 
 
 class XgimiConfigFLow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -31,15 +30,7 @@ class XgimiConfigFLow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(f"{name}-{token}")
                 self._abort_if_unique_id_configured()
-
-                xgimi_api = XgimiApi(
-                    ip=host, command_port=16735, advance_port=16750, alive_port=554, manufacturer_data=token)
-                alive = await xgimi_api.async_check_alive()
-
-                if not alive:
-                    errors[CONF_HOST] = "cannot_connect"
-                else:
-                    return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+                return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
         else:
             user_input = {}
 

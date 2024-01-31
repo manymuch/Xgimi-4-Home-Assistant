@@ -32,7 +32,19 @@ class XgimiApi:
             "volumeup": "KEYPRESSES:115",
             "poweroff": "KEYPRESSES:30",
             "volumemute": "KEYPRESSES:113",
-            "autofocus": "KEYPRESSES:2099"
+            "autofocus": "KEYPRESSES:2099",
+            "autofocus_new": "KEYPRESSES:2103",
+            "manual_focus_left": "KEYPRESSES:2097",
+            "manual_focus_right": "KEYPRESSES:2098",
+            "motor_left_overstep": "KEYPRESSES:2095",
+            "motor_left_start": "KEYPRESSES:2092",
+            "motor_right_overstep": "KEYPRESSES:2096",
+            "motor_right_start": "KEYPRESSES:2093",
+            "motor_stop": "KEYPRESSES:2101",
+            "shortcut_setting": "KEYPRESSES:2094",
+            "choose_source": "KEYPRESSES:2102",
+            "hibernate": "KEYPRESSES:2106",
+            "xmusic": "KEYPRESSES:2108",
         }
         self._advance_command = str({"action": 20000, "controlCmd": {"data": "command_holder",
                                     "delayTime": 0, "mode": 5, "time": 0, "type": 0}, "msgid": "2"})

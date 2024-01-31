@@ -1,7 +1,7 @@
 # Xgimi-4-Home-Assistant
 <img src="https://brands.home-assistant.io/xgimi/logo.png"  width="360" height="120">  
-XGIMI integration for home assistant. 
 
+XGIMI integration for home assistant.  
 Please give me a star :star_struck: if you like it.  
 
 
@@ -41,7 +41,8 @@ b. Linux terminal, use ``bluetoothctl`` in the terminal:
     Adjust the the token after the manufacturer according to your projector's model. The first ``0x46`` is the company code followed by the actual manufacturer token.
 
 
-Either with android app or with linux bluetoothctl, you should now able to poweron the projector without the remote.
+Either with android app or with linux bluetoothctl, you should now able to poweron the projector without the remote.  
+[Here](https://github.com/manymuch/Xgimi-4-Home-Assistant/issues/5#issuecomment-1752887102) provides an alternative way to get the token without iOS or Android device.  
 
 
 ### Choose a method to setup:  
@@ -75,11 +76,20 @@ data:
 target:
     entity_id: remote.z6x
 ```
-Current support command:  
+Available commands:  
+The below commands work for most devices:  
 ```
-play, pause, power, back, home, menu, right, left
+play, pause, power, back, home, menu, right, left,
 up, down, volumedown, volumeup,
-poweron, poweroff, volumemute, autofocus
+poweron, poweroff, volumemute
+```
+The below commands may only work for some devices, you can have a try and good luck :-)  
+```
+autofocus, autofocus_new,
+manual_focus_left, manual_focus_right,
+motor_left_overstep, motor_left_start,
+motor_right_overstep, motor_right_start, motor_stop,
+shortcut_setting, choose_source, hibernate, xmusic
 ```
 
 ### Dashboard example
