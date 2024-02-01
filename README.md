@@ -6,9 +6,20 @@ Please give me a star :star_struck: if you like it.
 
 
 ## 📦Install
+### Manually
 1. Copy whole folder `xgimi` into home assistant `custom_components`  
 2. Restart home assistant  
-
+### Via HACS
+1. Install [HACS](https://hacs.xyz/) if you do not have that already
+2. In the Home Assitant HACS Tab, click on the three dots at the top right
+3. Choose `Custom repositories`
+4. Paste `https://github.com/manymuch/Xgimi-4-Home-Assistant/` to the repository field, choose the `Integration` category and click `ADD`
+5. Close the dialog
+6. Disable the repository filter (hit `CLEAR` on the right of the `Filtering by Downloaded` text)
+7. Type `Xgimi` to the Search bar and select `Xgimi Projector Remote`
+8. Click `DOWNLOAD` on the bottom right
+9. Click `DOWNLOAD` in the dialog that just appeared
+10. Restart home assistant
 
 ## 🏗️Setup
 Prepare the following:  
