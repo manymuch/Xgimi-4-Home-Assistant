@@ -16,7 +16,7 @@ Please give me a star :star_struck: if you like it.
 4. Paste `https://github.com/manymuch/Xgimi-4-Home-Assistant/` to the repository field, choose the `Integration` category and click `ADD`
 5. Close the dialog
 6. Disable the repository filter (hit `CLEAR` on the right of the `Filtering by Downloaded` text)
-7. Type `XGIMI` to the Search bar and select `XGIMI_4_HA`
+7. Type `Xgimi` to the Search bar and select `Xgimi Projector Remote`
 8. Click `DOWNLOAD` on the bottom right
 9. Click `DOWNLOAD` in the dialog that just appeared
 10. Restart home assistant
