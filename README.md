@@ -29,7 +29,7 @@ If you do not want to use poweron feature, you can put random number for ``token
 
 ### Get your device BLE token
 
-The integration communicates with xgimi projector by UDP using local IP except for the **poweron** command. Once the projector is powered off, the only way to wake it up is sending a special ble advertisement. Such a ble advertisement contains a special token called `manufacture data`. The manufacture data is be different for **each device**.  
+The integration communicates with xgimi projector by UDP using local IP except for the **poweron** command. Once the projector is powered off, the only way to wake it up is sending a special ble advertisement. Such a ble advertisement contains a special token called `manufacture data`. The `manufacture data` is **different for each device**.  
 
 Here is a step by step guide to help you sniffer your device manufacture data(token):  
 
