@@ -3,7 +3,7 @@ import asyncio
 from bluez_peripheral.util import get_message_bus
 from bluez_peripheral.advert import Advertisement
 from time import time
-
+import subprocess
 
 class XgimiApi:
     def __init__(self, ip, command_port, advance_port, alive_port, manufacturer_data) -> None:
@@ -65,13 +65,20 @@ class XgimiApi:
 
     async def async_check_alive(self):
         try:
-            _, writer = await asyncio.open_connection(
-                self.ip, self.alive_port)
-            writer.close()
-            await writer.wait_closed()
-            return True
-        except ConnectionRefusedError:
-            return False
+            # 使用 subprocess 模块执行 ping 命令
+            process = await asyncio.create_subprocess_shell(
+                f"ping -c 1 {self.ip}",  # -c 1 表示发送一次 ICMP 请求
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+
+            stdout, stderr = await process.communicate()
+
+            # 检查返回码来判断是否成功
+            if process.returncode == 0:
+                return True
+            else:
+                return False
         except Exception:
             return False
 
