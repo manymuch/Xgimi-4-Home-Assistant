@@ -81,7 +81,7 @@ Either with android app or with linux bluetoothctl, you should now able to power
 The integration setup up a remote entity: e.g. `remote.z6x`.  
 Example usage of remote.send_command service:  
 ```yaml
-service: remote.send_command
+action: remote.send_command
 data:
     command: volumeup
 target:
