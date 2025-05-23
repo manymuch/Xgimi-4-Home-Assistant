@@ -55,6 +55,30 @@ b. Linux terminal, use ``bluetoothctl`` in the terminal:
 Either with android app or with linux bluetoothctl, you should now able to poweron the projector without the remote.  
 [Here](https://github.com/manymuch/Xgimi-4-Home-Assistant/issues/5#issuecomment-1752887102) provides an alternative way to get the token without iOS or Android device.  
 
+#### A script tool for scanning BLE token
+this script is adapted from https://github.com/jack-webb/XBleet
+to use this script, you need to install dependency first
+```shell
+pip install bleak
+```
+
+and then 
+```shell
+python3 tool/scan.py
+```
+
+It will scan the bluetooth signals until you stop the script. And it only prints the result with manufacturer code == 0x46 (which is our target).
+A sample output looks like:
+```text
+Discovered BLE device(s):
+Discovered BLE device(s):
+Discovered BLE device(s):
+Discovered BLE device(s):
+Discovered BLE device(s):
+Device name: BLuetooth 4.0 RC, Address: 70:FD:88:CE:97:9E
+Manufacturer 0x46
+Data 0x5AC993202D314CFFFFFF3043524B544D
+```
 
 ### Choose a method to setup:  
 #### Method A: manual setup
