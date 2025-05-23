@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuration du projecteur XGIMI",
+        "description": "Assurez-vous que le projecteur XGIMI est allumé avant de démarrer la configuration.",
+        "data": {
+          "name": "Nom du projecteur",
+          "host": "Adresse IP du projecteur",
+          "token": "Token BLE"
+        }
+      }
+    },
+    "error": {
+      "invalid_host": "Nom ou adresse IP invalide",
+      "cannot_connect": "Connexion échouée"
+    },
+    "abort": {
+      "already_configured": "Équipement déjà configuré"
+    }
+  }
+}
