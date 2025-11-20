@@ -141,7 +141,8 @@ See [tv-card-example.yaml](assets/tv-card-example.yaml) for a dashboard example 
 ### Troubleshoot
 
 1. If you are running Home Assistant with docker, make sure HA is accessible to the bluetooth, see [issue #12](https://github.com/manymuch/Xgimi-4-Home-Assistant/issues/12).  
-2. Make sure the bluetooth signal from HA host machine can reach the projector without blockage.  
+2. Make sure the bluetooth signal from HA host machine can reach the projector without blockage.
+3. If you can not use LAN control (volumeup, poweroff, etc..), it is likely that your XGIMI is running on native Android TV OS. Try to use [Android TV Remote](https://www.home-assistant.io/integrations/androidtv_remote/). See also [issue #40](https://github.com/manymuch/Xgimi-4-Home-Assistant/issues/40). 
 
 ### More Related threads about BLE token
 
