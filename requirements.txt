@@ -1,0 +1,5 @@
+# Requirements for Xgimi-4-Home-Assistant integration
+# These dependencies are used by the Home Assistant custom component
+
+asyncudp
+bluez-peripheral
