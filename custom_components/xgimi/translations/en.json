@@ -7,7 +7,8 @@
         "data": {
           "name": "TV Name",
           "host": "TV Host",
-          "token": "BLE Token"
+          "token": "BLE Token",
+          "mac_address": "Remote MAC Address (optional, for auto token updates)"
         }
       }
     },
