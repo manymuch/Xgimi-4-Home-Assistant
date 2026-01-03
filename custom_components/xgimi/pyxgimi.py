@@ -65,8 +65,13 @@ class XgimiApi:
             from homeassistant.components.bluetooth import async_register_callback
             from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 
-            def _bluetooth_callback(service_info, change):
-                """Handle Bluetooth advertisement."""
+            def _bluetooth_callback(service_info, _change):
+                """Handle Bluetooth advertisement.
+                
+                Args:
+                    service_info: Bluetooth service information
+                    _change: Bluetooth change type (unused but required by callback signature)
+                """
                 # Check if this is our remote
                 if service_info.address.upper() != self.mac_address:
                     return
@@ -74,7 +79,8 @@ class XgimiApi:
                 # Check for manufacturer data with ID 70 (0x0046)
                 if service_info.manufacturer_data and 70 in service_info.manufacturer_data:
                     new_token = service_info.manufacturer_data[70].hex()
-                    if new_token != self.manufacturer_data.lower():
+                    # Normalize both tokens to lowercase for comparison
+                    if new_token.lower() != self.manufacturer_data.lower():
                         _LOGGER.info(
                             "Detected BLE token rotation for %s. Updating token from %s to %s",
                             self.mac_address,
@@ -83,7 +89,7 @@ class XgimiApi:
                         )
                         self.manufacturer_data = new_token
 
-            # Register the callback
+            # Register the callback (async_register_callback is safe to call from sync context)
             self._bluetooth_callback = async_register_callback(
                 self.hass,
                 _bluetooth_callback,
