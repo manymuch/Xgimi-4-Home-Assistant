@@ -12,7 +12,7 @@ from homeassistant.components.remote import (
     RemoteEntity,
 )
 
-from .const import DOMAIN
+from .const import CONF_MAC, DOMAIN
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -38,12 +38,13 @@ async def async_setup_entry(
     host = config[CONF_HOST]
     name = config[CONF_NAME]
     token = config[CONF_TOKEN]
+    mac = config.get(CONF_MAC, "")
 
     unique_id = config_entry.unique_id
     assert unique_id is not None
 
     xgimi_api = XgimiApi(ip=host, command_port=16735, advance_port=16750, alive_port=554,
-                         manufacturer_data=token)
+                         manufacturer_data=token, mac_address=mac, hass=hass)
     async_add_entities([XgimiRemote(xgimi_api, name, unique_id)])
 
 
