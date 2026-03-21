@@ -3,18 +3,28 @@ import asyncio
 from bluez_peripheral.util import get_message_bus
 from bluez_peripheral.advert import Advertisement
 from time import time
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class XgimiApi:
-    def __init__(self, ip, command_port, advance_port, alive_port, manufacturer_data) -> None:
+    def __init__(self, ip, command_port, advance_port, alive_port, manufacturer_data, mac_address="", hass=None) -> None:
         self.ip = ip
         self.command_port = command_port  # 16735
         self.advance_port = advance_port  # 16750
         self.alive_port = alive_port  # 554
         self.manufacturer_data = manufacturer_data
+        self.mac_address = mac_address.upper() if mac_address else ""
+        self.hass = hass
         self._is_on = False
         self.last_on = time()
         self.last_off = time()
+        self._bluetooth_callback = None
+
+        # Register for Bluetooth advertisements if MAC address is provided and hass is available
+        if self.mac_address and self.hass:
+            self._register_bluetooth_callback()
 
         self._command_dict = {
             "ok": "KEYPRESSES:49",
@@ -48,6 +58,49 @@ class XgimiApi:
         }
         self._advance_command = str({"action": 20000, "controlCmd": {"data": "command_holder",
                                     "delayTime": 0, "mode": 5, "time": 0, "type": 0}, "msgid": "2"})
+
+    def _register_bluetooth_callback(self):
+        """Register callback for Bluetooth advertisements."""
+        try:
+            from homeassistant.components.bluetooth import async_register_callback
+            from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
+
+            def _bluetooth_callback(service_info, _change):
+                """Handle Bluetooth advertisement.
+                
+                Args:
+                    service_info: Bluetooth service information
+                    _change: Bluetooth change type (unused but required by callback signature)
+                """
+                # Check if this is our remote
+                if service_info.address.upper() != self.mac_address:
+                    return
+
+                # Check for manufacturer data with ID 70 (0x0046)
+                if service_info.manufacturer_data and 70 in service_info.manufacturer_data:
+                    new_token = service_info.manufacturer_data[70].hex()
+                    # Normalize both tokens to lowercase for comparison
+                    if new_token.lower() != self.manufacturer_data.lower():
+                        _LOGGER.info(
+                            "Detected BLE token rotation for %s. Updating token from %s to %s",
+                            self.mac_address,
+                            self.manufacturer_data,
+                            new_token
+                        )
+                        self.manufacturer_data = new_token
+
+            # Register the callback (async_register_callback is safe to call from sync context)
+            self._bluetooth_callback = async_register_callback(
+                self.hass,
+                _bluetooth_callback,
+                BluetoothCallbackMatcher(address=self.mac_address),
+                None,
+            )
+            _LOGGER.info("Registered Bluetooth callback for MAC address: %s", self.mac_address)
+        except ImportError:
+            _LOGGER.warning("Bluetooth integration not available. Token rotation monitoring disabled.")
+        except Exception as e:
+            _LOGGER.error("Failed to register Bluetooth callback: %s", e)
 
     @property
     def is_on(self) -> bool:

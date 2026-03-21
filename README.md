@@ -97,6 +97,7 @@ Copy the full value from the manufacturer data with ID `70` — this is the toke
 1. Prepare the following:  
     * ``host``: local IP of the projector, check the router or the setting in the projector's menu.  (For all commands via LAN: poweroff, volume, etc.)  
     * ``token``: BLE token to power on the projector.  (For poweron command only, via bluetooth signals)
+    * ``mac_address`` (optional): MAC address of the remote control. When provided, the integration will automatically monitor and update the BLE token when the remote rotates it, preventing power-on failures.
 
 2. Make sure your projector is **powered on** and can be reached via LAN by home assistant.
 3. Add new integration, search for xgimi
@@ -105,7 +106,21 @@ Copy the full value from the manufacturer data with ID `70` — this is the toke
     name: z6x
     host: 192.168.0.115
     token: 51F55A6D78E450FFFFFF0000000B000D
+    mac_address: 1C:XX:XX:XX:XX:XX  # Optional but recommended
     ```
+
+### 🔄 Automatic BLE Token Updates
+
+The Xgimi remote control periodically rotates its BLE token for security reasons. If you provide the remote's MAC address during setup, the integration will automatically:
+- Monitor Bluetooth advertisements from your remote
+- Detect when the BLE token changes
+- Update the stored token automatically
+- Ensure power-on commands continue to work after token rotation
+
+**To enable automatic token updates:**
+1. Find your remote's MAC address using the steps in the "Get BLE token" section above
+2. Enter the MAC address during integration setup (e.g., `1C:XX:XX:XX:XX:XX`)
+3. The integration will handle token updates automatically in the background
 
 ## 📺How to use
 The integration setup up a remote entity: e.g. `remote.z6x`.  

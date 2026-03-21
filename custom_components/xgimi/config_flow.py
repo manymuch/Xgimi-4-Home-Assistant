@@ -9,6 +9,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util.network import is_host_valid
 
 from .const import (
+    CONF_MAC,
     DOMAIN,
 )
 
@@ -25,6 +26,7 @@ class XgimiConfigFLow(config_entries.ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             name = user_input[CONF_NAME]
             token = user_input[CONF_TOKEN]
+            mac = user_input.get(CONF_MAC, "")
             if not is_host_valid(host):
                 errors[CONF_HOST] = "invalid_host"
             else:
@@ -40,6 +42,7 @@ class XgimiConfigFLow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_NAME, default=user_input.get(CONF_NAME, vol.UNDEFINED)): str,
                 vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, vol.UNDEFINED)): str,
                 vol.Required(CONF_TOKEN, default=user_input.get(CONF_TOKEN, vol.UNDEFINED)): str,
+                vol.Optional(CONF_MAC, default=user_input.get(CONF_MAC, "")): str,
             }),
             errors=errors,
         )

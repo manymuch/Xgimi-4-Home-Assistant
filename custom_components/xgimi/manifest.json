@@ -10,5 +10,11 @@
   "codeowners": [
     "@manymuch"
   ],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "bluetooth": [
+    {
+      "manufacturer_id": 70,
+      "manufacturer_data_start": []
+    }
+  ]
 }

@@ -7,7 +7,8 @@
         "data": {
           "name": "电视名称",
           "host": "电视 IP",
-          "token": "蓝牙 Token"
+          "token": "蓝牙 Token",
+          "mac_address": "遥控器 MAC 地址（可选，用于自动更新 Token）"
         }
       }
     },

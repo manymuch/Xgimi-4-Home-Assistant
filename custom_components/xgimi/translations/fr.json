@@ -7,7 +7,8 @@
         "data": {
           "name": "Nom du projecteur",
           "host": "Adresse IP du projecteur",
-          "token": "Token BLE"
+          "token": "Token BLE",
+          "mac_address": "Adresse MAC de la télécommande (optionnel, pour mise à jour automatique du token)"
         }
       }
     },
