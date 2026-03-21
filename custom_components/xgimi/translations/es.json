@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configura la información de la TV",
+        "description": "Por favor, has de estar seguro que tu TV está encendida antes de intentar configurarla.",
+        "data": {
+          "name": "Nombre de la TV",
+          "host": "Nombre del host/IP de la TV",
+          "token": "Token de BLE"
+        }
+      }
+    },
+    "error": {
+      "invalid_host": "Nombre del host o dirección IP inválidos",
+      "cannot_connect": "Ha fallado la conexión"
+    },
+    "abort": {
+      "already_configured": "El dispositivo está ya configurado"
+    }
+  }
+}
