@@ -18,5 +18,43 @@
     "abort": {
       "already_configured": "El dispositivo está ya configurado"
     }
+  },
+  "selector": {
+    "wake_backend": {
+      "options": {
+        "auto": "Automático",
+        "local": "Bluetooth local",
+        "esp32": "ESP32 / ESPHome"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "wake_backend": {
+        "name": "Backend de activación",
+        "state": {
+          "auto": "Automático",
+          "local": "Bluetooth local",
+          "esp32": "ESP32 / ESPHome"
+        }
+      },
+      "esp32_wake_entity": {
+        "name": "Botón de activación ESPHome",
+        "state": {
+          "__none__": "Sin botón ESPHome"
+        }
+      },
+      "bluetooth_adapter": {
+        "name": "Adaptador Bluetooth",
+        "state": {
+          "automatic": "Automático"
+        }
+      }
+    },
+    "number": {
+      "advertisement_duration": {
+        "name": "Duración del anuncio"
+      }
+    }
   }
 }

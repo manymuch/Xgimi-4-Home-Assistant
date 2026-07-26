@@ -18,5 +18,43 @@
     "abort": {
       "already_configured": "该设备已经配置过"
     }
+  },
+  "selector": {
+    "wake_backend": {
+      "options": {
+        "auto": "自动",
+        "local": "本地蓝牙",
+        "esp32": "ESP32 / ESPHome"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "wake_backend": {
+        "name": "唤醒后端",
+        "state": {
+          "auto": "自动",
+          "local": "本地蓝牙",
+          "esp32": "ESP32 / ESPHome"
+        }
+      },
+      "esp32_wake_entity": {
+        "name": "ESPHome 唤醒按钮",
+        "state": {
+          "__none__": "不使用 ESPHome 按钮"
+        }
+      },
+      "bluetooth_adapter": {
+        "name": "蓝牙适配器",
+        "state": {
+          "automatic": "自动"
+        }
+      }
+    },
+    "number": {
+      "advertisement_duration": {
+        "name": "广播持续时间"
+      }
+    }
   }
 }

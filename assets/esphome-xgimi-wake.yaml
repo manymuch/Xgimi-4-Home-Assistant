@@ -1,0 +1,143 @@
+# XGIMI BLE wake advertiser and Bluetooth Proxy for ESPHome 2026.7.x.
+#
+# This example deliberately contains both the standard Bluetooth Proxy and a
+# custom XGIMI advertiser. The proxy can receive/relay nearby BLE traffic; the
+# custom script below is what transmits the projector wake packet.
+#
+# Replace the 16 zero token bytes in xgimi_advertising_data below. If the token
+# is A1B203..., write it as 0xA1, 0xB2, 0x03, ... (one 0xNN value per pair).
+
+substitutions:
+  device_name: xgimi-wake
+  friendly_name: XGIMI Wake
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+
+api:
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+captive_portal:
+
+# Full Bluetooth Proxy configuration. Scanning and custom advertising share the
+# ESP32 radio and BLE RAM. The wake script pauses scanning for a few seconds so
+# the raw XGIMI packet has the radio to itself, then resumes continuous scans.
+esp32_ble_tracker:
+  id: ble_tracker
+  scan_parameters:
+    continuous: true
+
+bluetooth_proxy:
+  active: true
+
+esp32_ble:
+  id: xgimi_ble
+  name: "Bluetooth 4.0 RC"
+  advertising: true
+
+script:
+  - id: send_xgimi_wake_advertisement
+    mode: restart
+    then:
+      # Pause proxy scanning before changing the BLE advertising payload. This
+      # is optional on roomy hardware, but makes proxy + advertiser coexistence
+      # more reliable on ESP32 devices with limited radio resources.
+      - esp32_ble_tracker.stop_scan:
+      - delay: 250ms
+
+      # Stop any ordinary ESPHome advertisement before installing raw data.
+      - lambda: |-
+          esp_ble_gap_stop_advertising();
+      - delay: 150ms
+
+      # This legacy advertisement is exactly 31 bytes:
+      # flags + complete UUID 0x1812 + appearance 961 + manufacturer data.
+      # The manufacturer AD is: 0x46, 0x00, then the projector token.
+      - lambda: |-
+          static uint8_t xgimi_advertising_data[] = {
+            0x02, 0x01, 0x06,
+            0x03, 0x03, 0x12, 0x18,
+            0x03, 0x19, 0xC1, 0x03,
+            0x13, 0xFF, 0x46, 0x00,
+            // Replace these 16 zero bytes with the token from HA's
+            // Bluetooth Advertisement Monitor manufacturer key 70.
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00
+          };
+
+          // The local name is in the scan response because the advertising
+          // packet is already full. It must remain "Bluetooth 4.0 RC".
+          static uint8_t xgimi_scan_response[] = {
+            0x11, 0x09,
+            'B', 'l', 'u', 'e', 't', 'o', 'o', 't', 'h',
+            ' ', '4', '.', '0', ' ', 'R', 'C'
+          };
+
+          const esp_err_t adv_result = esp_ble_gap_config_adv_data_raw(
+            xgimi_advertising_data, sizeof(xgimi_advertising_data)
+          );
+          const esp_err_t scan_result = esp_ble_gap_config_scan_rsp_data_raw(
+            xgimi_scan_response, sizeof(xgimi_scan_response)
+          );
+          if (adv_result != ESP_OK || scan_result != ESP_OK) {
+            ESP_LOGE(
+              "xgimi_wake",
+              "Could not configure raw BLE data: adv=%d scan=%d",
+              adv_result,
+              scan_result
+            );
+          }
+      - delay: 250ms
+
+      - lambda: |-
+          static esp_ble_adv_params_t xgimi_parameters{};
+          xgimi_parameters.adv_int_min = 0x20;
+          xgimi_parameters.adv_int_max = 0x40;
+          xgimi_parameters.adv_type = ADV_TYPE_IND;
+          xgimi_parameters.own_addr_type = BLE_ADDR_TYPE_PUBLIC;
+          xgimi_parameters.channel_map = ADV_CHNL_ALL;
+          xgimi_parameters.adv_filter_policy =
+            ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY;
+          const esp_err_t result =
+            esp_ble_gap_start_advertising(&xgimi_parameters);
+          if (result != ESP_OK) {
+            ESP_LOGE("xgimi_wake", "Could not start BLE advertising: %d", result);
+          }
+
+      # Keep one continuous XGIMI advertisement active for about four seconds.
+      - delay: 4s
+      - lambda: |-
+          esp_ble_gap_stop_advertising();
+      - delay: 150ms
+
+      # Restore ordinary ESPHome advertising after the wake packet, then let
+      # the Bluetooth Proxy resume its continuous scan.
+      - lambda: |-
+          id(xgimi_ble).advertising_start();
+      - esp32_ble_tracker.start_scan:
+          continuous: true
+
+button:
+  - platform: template
+    name: "XGIMI Projector Wakeup"
+    id: xgimi_projector_wakeup
+    # Home Assistant exposes this as button.xgimi_projector_wakeup. The XGIMI
+    # integration calls button.press; do not use a stock proxy entity here.
+    on_press:
+      - script.execute: send_xgimi_wake_advertisement

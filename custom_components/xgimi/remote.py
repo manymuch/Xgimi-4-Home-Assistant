@@ -1,97 +1,112 @@
-"""Support for the Xgimi Projector."""
+"""Remote entity for XGIMI projectors."""
 
+from __future__ import annotations
+
+import asyncio
 from collections.abc import Iterable
+from typing import Any
+
+from homeassistant.components.remote import RemoteEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from .pyxgimi import XgimiApi
 
-
-from homeassistant.components.remote import (
-    RemoteEntity,
-)
-
-from .const import DOMAIN
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Xiaomi TV platform."""
-
-    # If a hostname is set. Discovery is skipped.
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-    token = config.get(CONF_TOKEN)
-    unique_id = f"{name}-{token}"
-
-    xgimi_api = XgimiApi(ip=host, command_port=16735, advance_port=16750, alive_port=554,
-                         manufacturer_data=token)
-    async_add_entities([XgimiRemote(xgimi_api, name, unique_id)])
+from .const import COMMAND_POWER_OFF, COMMAND_POWER_ON
+from .entity import xgimi_device_info
+from .runtime import XgimiRuntimeData
+from .wake.exceptions import WakeBackendError
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ConfigEntry[XgimiRuntimeData],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    config = hass.data[DOMAIN][config_entry.entry_id]
-    host = config[CONF_HOST]
-    name = config[CONF_NAME]
-    token = config[CONF_TOKEN]
-
+    """Set up an XGIMI remote from a config entry."""
     unique_id = config_entry.unique_id
     assert unique_id is not None
-
-    xgimi_api = XgimiApi(ip=host, command_port=16735, advance_port=16750, alive_port=554,
-                         manufacturer_data=token)
-    async_add_entities([XgimiRemote(xgimi_api, name, unique_id)])
+    async_add_entities(
+        [
+            XgimiRemote(
+                config_entry.runtime_data,
+                config_entry.data[CONF_NAME],
+                unique_id,
+                device_info=xgimi_device_info(config_entry),
+            )
+        ]
+    )
 
 
 class XgimiRemote(RemoteEntity):
-    """An entity for Xgimi Projector
-    """
+    """Representation of an XGIMI projector remote."""
 
-    def __init__(self, xgimi_api, name, unique_id):
-        self.xgimi_api = xgimi_api
-        self._name = name
-        self._icon = "mdi:projector"
-        self._unique_id = unique_id
+    _attr_icon = "mdi:projector"
 
-    async def async_update(self):
-        """Retrieve latest state."""
-        await self.xgimi_api.async_fetch_data()
-
-    @property
-    def is_on(self):
-        """Return true if remote is on."""
-        return self.xgimi_api._is_on
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
+    def __init__(
+        self,
+        runtime: XgimiRuntimeData,
+        name: str,
+        unique_id: str,
+        *,
+        device_info: Any | None = None,
+    ) -> None:
+        """Initialize the remote entity."""
+        self.runtime = runtime
+        self._attr_name = name
+        self._attr_unique_id = unique_id
+        self._attr_device_info = device_info
 
     @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon
+    def is_on(self) -> bool:
+        """Return whether the projector is on."""
+        return self.runtime.api.is_on
 
     @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return self._unique_id
+    def supported_commands(self) -> tuple[str, ...]:
+        """Return the command names accepted by the remote."""
+        return self.runtime.api.supported_commands
 
-    async def async_turn_on(self, **kwargs):
-        """Turn the Xgimi Projector On."""
-        # Do the turning on.
-        await self.xgimi_api.async_send_command("poweron")
+    @property
+    def extra_state_attributes(self) -> dict[str, list[str]]:
+        """Return read-only command metadata for automations and diagnostics."""
+        return {"supported_commands": list(self.supported_commands)}
 
-    async def async_turn_off(self, **kwargs):
-        """Turn the Xgimi Projector Off."""
-        # Do the turning off.
-        await self.xgimi_api.async_send_command("poweroff")
+    async def async_update(self) -> None:
+        """Retrieve the latest projector state."""
+        await self.runtime.api.async_fetch_data()
 
-    async def async_send_command(self, command: Iterable[str], **kwargs) -> None:
-        """Send a command to one of the devices."""
+    async def _async_wake(self) -> None:
+        """Wake the projector and update state only after success."""
+        try:
+            await self.runtime.async_wake()
+        except asyncio.CancelledError:
+            raise
+        except WakeBackendError as err:
+            raise HomeAssistantError(str(err)) from err
+        except Exception as err:
+            safe_error = WakeBackendError()
+            raise HomeAssistantError(str(safe_error)) from err
+
+        self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the XGIMI projector on."""
+        await self._async_wake()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the XGIMI projector off."""
+        await self.runtime.api.async_send_command(COMMAND_POWER_OFF)
+
+    async def async_send_command(
+        self,
+        command: Iterable[str],
+        **kwargs: Any,
+    ) -> None:
+        """Send one or more remote commands."""
         for single_command in command:
-            await self.xgimi_api.async_send_command(single_command)
+            if single_command == COMMAND_POWER_ON:
+                await self._async_wake()
+            else:
+                await self.runtime.api.async_send_command(single_command)
