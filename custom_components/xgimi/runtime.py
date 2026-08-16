@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
+    CONF_DEBUG_LOGGING,
     CONF_ESP32_WAKE_ENTITY,
     WAKE_BACKEND_AUTO,
     WAKE_BACKEND_LOCAL,
@@ -44,6 +45,7 @@ class XgimiRuntimeData:
     effective_wake_backend: str | None
     advertisement_duration: float
     esp32_wake_entity: str | None
+    debug_logging: bool
     setup_wake_error: WakeBackendError | None = None
     last_wake_result: str | None = None
     last_successful_wake: datetime | None = None
@@ -73,6 +75,7 @@ class XgimiRuntimeData:
         effective_backend: str | None,
         advertisement_duration: float,
         esp32_wake_entity: str | None,
+        debug_logging: bool,
         setup_error: WakeBackendError | None,
     ) -> None:
         """Update the in-memory configuration and Repair state."""
@@ -80,6 +83,7 @@ class XgimiRuntimeData:
         self.effective_wake_backend = effective_backend
         self.advertisement_duration = advertisement_duration
         self.esp32_wake_entity = esp32_wake_entity
+        self.debug_logging = debug_logging
         self.setup_wake_error = setup_error
 
         if self.entry_id is None:
@@ -136,6 +140,7 @@ class XgimiRuntimeData:
                     effective_backend=None,
                     advertisement_duration=config.advertisement_duration,
                     esp32_wake_entity=config.esp32_entity_id,
+                    debug_logging=config.debug_logging,
                     setup_error=err,
                 )
                 self._notify_config_listeners()
@@ -149,6 +154,7 @@ class XgimiRuntimeData:
                 effective_backend=new_backend.backend_type,
                 advertisement_duration=config.advertisement_duration,
                 esp32_wake_entity=config.esp32_entity_id,
+                debug_logging=config.debug_logging,
                 setup_error=None,
             )
             self._notify_config_listeners()

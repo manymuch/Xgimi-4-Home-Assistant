@@ -16,6 +16,7 @@ from .const import (
     BLUETOOTH_ADAPTER_AUTO,
     CONF_ADVERTISEMENT_DURATION,
     CONF_BLUETOOTH_ADAPTER,
+    CONF_DEBUG_LOGGING,
     CONF_ESP32_WAKE_ENTITY,
     CONF_WAKE_BACKEND,
     DEFAULT_ADVERTISEMENT_DURATION,
@@ -277,91 +278,36 @@ class XgimiConfigFlow(
         return await self._async_finish_wake_step(WAKE_BACKEND_ESP32, user_input)
 
 
-class XgimiOptionsFlow(_WakeFlowMixin, config_entries.OptionsFlowWithReload):
-    """Handle wake backend options."""
-
-    def __init__(self) -> None:
-        """Initialize the options flow."""
-        self._selected_backend = DEFAULT_WAKE_BACKEND
-        self._adapter_cache = None
+class XgimiOptionsFlow(config_entries.OptionsFlowWithReload):
+    """Handle integration-level XGIMI options."""
 
     async def async_step_init(
         self,
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
-        """Select which wake backend to configure."""
+        """Configure integration-level diagnostics."""
+        current = wake_backend_config(self.config_entry)
         if user_input is not None:
-            self._selected_backend = user_input[CONF_WAKE_BACKEND]
-            return await getattr(self, f"async_step_{self._selected_backend}")()
+            options = dict(self.config_entry.options)
+            options.setdefault(CONF_WAKE_BACKEND, current.configured_backend)
+            if current.esp32_entity_id is not None:
+                options.setdefault(CONF_ESP32_WAKE_ENTITY, current.esp32_entity_id)
+            options.setdefault(CONF_BLUETOOTH_ADAPTER, current.bluetooth_adapter)
+            options.setdefault(
+                CONF_ADVERTISEMENT_DURATION,
+                current.advertisement_duration,
+            )
+            options[CONF_DEBUG_LOGGING] = user_input[CONF_DEBUG_LOGGING]
+            return self.async_create_entry(title="", data=options)
 
-        self._selected_backend = wake_backend_config(
-            self.config_entry
-        ).configured_backend
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_WAKE_BACKEND,
-                        default=self._selected_backend,
-                    ): _backend_selector()
+                    vol.Optional(
+                        CONF_DEBUG_LOGGING,
+                        default=current.debug_logging,
+                    ): selector.BooleanSelector()
                 }
             ),
         )
-
-    def _current_values(self) -> dict[str, Any]:
-        """Return normalized current values."""
-        normalized = wake_backend_config(self.config_entry)
-        return {
-            CONF_ESP32_WAKE_ENTITY: normalized.esp32_entity_id,
-            CONF_BLUETOOTH_ADAPTER: normalized.bluetooth_adapter,
-            CONF_ADVERTISEMENT_DURATION: normalized.advertisement_duration,
-        }
-
-    async def _async_finish_options_step(
-        self,
-        step_id: str,
-        user_input: dict[str, Any] | None,
-    ) -> ConfigFlowResult:
-        """Validate and save a conditional options step."""
-        errors: dict[str, str] = {}
-        current = self._current_values()
-        if user_input is not None:
-            _validate_entity_exists(self, user_input, errors)
-            if not errors:
-                return self.async_create_entry(
-                    title="",
-                    data={
-                        CONF_WAKE_BACKEND: self._selected_backend,
-                        **user_input,
-                        CONF_ADVERTISEMENT_DURATION: current[
-                            CONF_ADVERTISEMENT_DURATION
-                        ],
-                    },
-                )
-        return self.async_show_form(
-            step_id=step_id,
-            data_schema=await self._async_wake_schema(
-                self._selected_backend,
-                user_input or current,
-            ),
-            errors=errors,
-        )
-
-    async def async_step_auto(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Configure automatic wake options."""
-        return await self._async_finish_options_step(WAKE_BACKEND_AUTO, user_input)
-
-    async def async_step_local(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Configure local wake options."""
-        return await self._async_finish_options_step(WAKE_BACKEND_LOCAL, user_input)
-
-    async def async_step_esp32(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Configure ESP32 wake options."""
-        return await self._async_finish_options_step(WAKE_BACKEND_ESP32, user_input)

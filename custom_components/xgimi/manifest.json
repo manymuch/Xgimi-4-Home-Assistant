@@ -1,7 +1,7 @@
 {
   "domain": "xgimi",
   "name": "XGIMI Projector Remote",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "codeowners": ["@manymuch"],
   "config_flow": true,
   "dependencies": ["bluetooth"],
@@ -9,5 +9,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/manymuch/Xgimi-4-Home-Assistant/issues",
-  "requirements": ["asyncudp"]
+  "loggers": ["dbus_fast"],
+  "requirements": ["asyncudp", "dbus-fast>=2.21.1"]
 }

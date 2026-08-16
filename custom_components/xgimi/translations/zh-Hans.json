@@ -29,6 +29,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "bluetooth_available": {
+        "name": "蓝牙广播"
+      }
+    },
     "select": {
       "wake_backend": {
         "name": "唤醒后端",
@@ -54,6 +59,11 @@
     "number": {
       "advertisement_duration": {
         "name": "广播持续时间"
+      }
+    },
+    "sensor": {
+      "bluetooth_diagnostics": {
+        "name": "蓝牙设备"
       }
     }
   }

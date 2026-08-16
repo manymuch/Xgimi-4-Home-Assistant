@@ -7,6 +7,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from .bluetooth_diagnostics import bluetooth_available
 from .runtime import XgimiRuntimeData
 
 
@@ -23,14 +24,22 @@ async def async_get_config_entry_diagnostics(
         "configured_wake_backend": runtime.configured_wake_backend,
         "effective_wake_backend": runtime.effective_wake_backend,
         "supported_commands": list(runtime.api.supported_commands),
+        "debug_logging": runtime.debug_logging,
         "esp32_wake_entity": runtime.esp32_wake_entity,
         "esp32_entity_available": backend_diagnostics.get("esp32_entity_available"),
         "dbus_available": backend_diagnostics.get("dbus_available"),
         "bluez_available": backend_diagnostics.get("bluez_available"),
+        "bluetooth_available": bluetooth_available(backend_diagnostics),
         "selected_adapter": backend_diagnostics.get("selected_adapter"),
         "advertising_supported": backend_diagnostics.get("advertising_supported"),
         "supported_instances": backend_diagnostics.get("supported_instances"),
         "active_instances": backend_diagnostics.get("active_instances"),
+        "bluez_version": backend_diagnostics.get("bluez_version"),
+        "supported_features": backend_diagnostics.get("supported_features"),
+        "supported_includes": backend_diagnostics.get("supported_includes"),
+        "controller_capabilities": backend_diagnostics.get(
+            "supported_capabilities"
+        ),
         "advertisement_duration": runtime.advertisement_duration,
         "last_wake_result": runtime.last_wake_result,
         "last_successful_wake": (

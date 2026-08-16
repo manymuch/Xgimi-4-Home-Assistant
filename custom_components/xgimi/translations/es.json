@@ -29,6 +29,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "bluetooth_available": {
+        "name": "Anuncio Bluetooth"
+      }
+    },
     "select": {
       "wake_backend": {
         "name": "Backend de activación",
@@ -54,6 +59,11 @@
     "number": {
       "advertisement_duration": {
         "name": "Duración del anuncio"
+      }
+    },
+    "sensor": {
+      "bluetooth_diagnostics": {
+        "name": "Dispositivo Bluetooth"
       }
     }
   }

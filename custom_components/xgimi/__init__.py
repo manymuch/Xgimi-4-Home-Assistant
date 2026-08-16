@@ -19,9 +19,11 @@ from .wake.factory import (
 )
 
 PLATFORMS: Final[list[Platform]] = [
+    Platform.BINARY_SENSOR,
     Platform.NUMBER,
     Platform.REMOTE,
     Platform.SELECT,
+    Platform.SENSOR,
 ]
 
 XgimiConfigEntry = ConfigEntry[XgimiRuntimeData]
@@ -58,6 +60,7 @@ async def async_setup_entry(
         effective_wake_backend=effective_backend,
         advertisement_duration=config.advertisement_duration,
         esp32_wake_entity=config.esp32_entity_id,
+        debug_logging=config.debug_logging,
         setup_wake_error=setup_error,
         config_entry=entry,
     )

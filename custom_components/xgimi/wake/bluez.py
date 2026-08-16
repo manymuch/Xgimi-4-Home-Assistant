@@ -100,6 +100,10 @@ class BlueZAdapter:
     address: str | None
     supported_instances: int | None
     active_instances: int | None
+    bluez_version: str | None
+    supported_includes: tuple[str, ...] | None
+    supported_features: tuple[str, ...] | None
+    supported_capabilities: dict[str, int] | None
 
     @property
     def has_free_instance(self) -> bool:
@@ -158,6 +162,11 @@ class XgimiAdvertisement(ServiceInterface):
         """Return the Bluetooth appearance."""
         return XGIMI_APPEARANCE
 
+    @dbus_property(access=PropertyAccess.READ, name="TxPower")
+    def tx_power(self) -> "n":  # noqa: F821
+        """Return the requested advertisement transmit power."""
+        return 0
+
     @method(name="Release")
     def release(self) -> None:
         """Handle BlueZ releasing the advertisement."""
@@ -190,6 +199,43 @@ def _optional_str(properties: dict[str, Any], key: str) -> str | None:
         return None
     unwrapped = _variant_value(value)
     return unwrapped if isinstance(unwrapped, str) else None
+
+
+def _optional_str_tuple(
+    properties: dict[str, Any], key: str
+) -> tuple[str, ...] | None:
+    """Read an optional array of strings from D-Bus properties."""
+    value = properties.get(key)
+    if value is None:
+        return None
+    unwrapped = _variant_value(value)
+    if not isinstance(unwrapped, list | tuple):
+        return None
+    if not all(isinstance(item, str) for item in unwrapped):
+        return None
+    return tuple(unwrapped)
+
+
+def _optional_int_dict(
+    properties: dict[str, Any], key: str
+) -> dict[str, int] | None:
+    """Read an optional string-to-integer D-Bus dictionary."""
+    value = properties.get(key)
+    if value is None:
+        return None
+    unwrapped = _variant_value(value)
+    if not isinstance(unwrapped, dict):
+        return None
+    result: dict[str, int] = {}
+    for item_key, item_value in unwrapped.items():
+        item_value = _variant_value(item_value)
+        if (
+            isinstance(item_key, str)
+            and isinstance(item_value, int)
+            and not isinstance(item_value, bool)
+        ):
+            result[item_key] = item_value
+    return result
 
 
 async def _async_connect_system_bus(bus_factory: BusFactory) -> _MessageBusLike:
@@ -288,6 +334,16 @@ def _all_adapters(
                     manager_properties, "SupportedInstances"
                 ),
                 active_instances=_optional_int(manager_properties, "ActiveInstances"),
+                bluez_version=_optional_str(adapter_properties, "Name"),
+                supported_includes=_optional_str_tuple(
+                    manager_properties, "SupportedIncludes"
+                ),
+                supported_features=_optional_str_tuple(
+                    manager_properties, "SupportedFeatures"
+                ),
+                supported_capabilities=_optional_int_dict(
+                    manager_properties, "SupportedCapabilities"
+                ),
             )
         )
     return adapters
@@ -351,12 +407,14 @@ class BlueZWakeBackend:
         *,
         adapter_path: str = BLUETOOTH_ADAPTER_AUTO,
         duration: float = 4.0,
+        debug_logging: bool = False,
         bus_factory: BusFactory = _default_bus_factory,
     ) -> None:
         """Initialize the BlueZ backend."""
         self._token = token
         self.adapter_path = adapter_path
         self.duration = duration
+        self._debug_logging = debug_logging
         self._bus_factory = bus_factory
         self._lock = asyncio.Lock()
         self._close_event = asyncio.Event()
@@ -370,6 +428,11 @@ class BlueZWakeBackend:
         self._bluez_available = False
         self._selected_adapter: BlueZAdapter | None = None
         self._advertising_supported = False
+
+    def _log_debug(self, message: str, *args: Any) -> None:
+        """Emit optional wake diagnostics without changing global log levels."""
+        if self._debug_logging:
+            _LOGGER.info("Debug: " + message, *args)
 
     def _manufacturer_payload(self) -> bytes:
         """Decode and validate the token without exposing it."""
@@ -416,6 +479,15 @@ class BlueZWakeBackend:
             raise
 
         self._selected_adapter = adapter
+        self._log_debug(
+            "Selected BlueZ adapter path=%s name=%s address=%s "
+            "supported_instances=%s active_instances=%s",
+            adapter.path,
+            adapter.name,
+            adapter.address,
+            adapter.supported_instances,
+            adapter.active_instances,
+        )
         return bus, adapter
 
     async def async_probe(self) -> None:
@@ -425,6 +497,7 @@ class BlueZWakeBackend:
         self._manufacturer_payload()
         bus, _ = await self._async_connect_and_select()
         bus.disconnect()
+        self._log_debug("BlueZ advertising probe completed successfully")
 
     async def _async_register(
         self,
@@ -433,6 +506,11 @@ class BlueZWakeBackend:
         advertisement_path: str,
     ) -> None:
         """Register the exported advertisement."""
+        self._log_debug(
+            "Registering advertisement path=%s on adapter=%s",
+            advertisement_path,
+            adapter.path,
+        )
         try:
             await _async_call(
                 bus,
@@ -445,7 +523,11 @@ class BlueZWakeBackend:
                     body=[advertisement_path, {}],
                 ),
             )
+            self._log_debug("Advertisement registration completed")
         except _DBusCallError as err:
+            self._log_debug(
+                "Advertisement registration failed error=%s", err.error_name
+            )
             if err.error_name in (
                 BLUEZ_ERROR_INVALID_ARGUMENTS,
                 BLUEZ_ERROR_INVALID_LENGTH,
@@ -504,6 +586,11 @@ class BlueZWakeBackend:
     ) -> None:
         """Unregister, unexport, and disconnect without hiding the main error."""
         if registered and bus.connected:
+            self._log_debug(
+                "Unregistering advertisement path=%s from adapter=%s",
+                advertisement_path,
+                adapter_path,
+            )
             try:
                 await _async_call(
                     bus,
@@ -517,18 +604,20 @@ class BlueZWakeBackend:
                     ),
                 )
             except Exception as err:
-                _LOGGER.debug(
+                self._log_debug(
                     "Could not unregister XGIMI BLE advertisement: %s",
                     getattr(err, "error_name", type(err).__name__),
                 )
         try:
             bus.unexport(advertisement_path, advertisement)
+            self._log_debug("Unexported advertisement path=%s", advertisement_path)
         except Exception as err:
-            _LOGGER.debug(
+            self._log_debug(
                 "Could not unexport XGIMI BLE advertisement: %s",
                 type(err).__name__,
             )
         bus.disconnect()
+        self._log_debug("Disconnected BlueZ D-Bus connection")
 
     async def async_wake(self) -> None:
         """Advertise the XGIMI wake packet for the configured duration."""
@@ -546,6 +635,10 @@ class BlueZWakeBackend:
             self._advertisement = advertisement
             self._advertisement_path = advertisement_path
             try:
+                self._log_debug(
+                    "Starting XGIMI BLE wake advertisement duration=%s",
+                    self.duration,
+                )
                 bus.export(advertisement_path, advertisement)
                 await self._async_register(bus, adapter, advertisement_path)
                 registered = True
@@ -590,6 +683,7 @@ class BlueZWakeBackend:
                 self._advertisement = None
                 self._advertisement_path = None
                 self._registered = False
+                self._log_debug("XGIMI BLE wake advertisement cleanup completed")
 
     async def async_close(self) -> None:
         """Stop any active advertisement and close the backend."""
@@ -605,6 +699,7 @@ class BlueZWakeBackend:
         """Return cached, non-sensitive BlueZ diagnostics."""
         adapter = self._selected_adapter
         return {
+            "debug_logging": self._debug_logging,
             "dbus_available": self._dbus_available,
             "bluez_available": self._bluez_available,
             "selected_adapter": adapter.path if adapter else None,
@@ -614,5 +709,29 @@ class BlueZWakeBackend:
             ),
             "active_instances": (
                 adapter.active_instances if adapter is not None else None
+            ),
+            "bluez_version": (
+                adapter.bluez_version if self._debug_logging and adapter else None
+            ),
+            "supported_includes": (
+                list(adapter.supported_includes)
+                if self._debug_logging
+                and adapter
+                and adapter.supported_includes is not None
+                else None
+            ),
+            "supported_features": (
+                list(adapter.supported_features)
+                if self._debug_logging
+                and adapter
+                and adapter.supported_features is not None
+                else None
+            ),
+            "supported_capabilities": (
+                dict(adapter.supported_capabilities)
+                if self._debug_logging
+                and adapter
+                and adapter.supported_capabilities is not None
+                else None
             ),
         }

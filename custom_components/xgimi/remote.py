@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Iterable
 from typing import Any
 
@@ -17,6 +18,8 @@ from .const import COMMAND_POWER_OFF, COMMAND_POWER_ON
 from .entity import xgimi_device_info
 from .runtime import XgimiRuntimeData
 from .wake.exceptions import WakeBackendError
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -79,6 +82,11 @@ class XgimiRemote(RemoteEntity):
 
     async def _async_wake(self) -> None:
         """Wake the projector and update state only after success."""
+        if self.runtime.debug_logging:
+            _LOGGER.info(
+                "Debug: XGIMI wake requested backend=%s",
+                self.runtime.effective_wake_backend,
+            )
         try:
             await self.runtime.async_wake()
         except asyncio.CancelledError:
@@ -106,6 +114,8 @@ class XgimiRemote(RemoteEntity):
     ) -> None:
         """Send one or more remote commands."""
         for single_command in command:
+            if self.runtime.debug_logging:
+                _LOGGER.info("Debug: XGIMI remote command=%s", single_command)
             if single_command == COMMAND_POWER_ON:
                 await self._async_wake()
             else:

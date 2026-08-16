@@ -6,7 +6,7 @@ from typing import Final
 
 DOMAIN: Final = "xgimi"
 NAME: Final = "XGIMI Projector Remote"
-VERSION: Final = "1.0.0"
+VERSION: Final = "1.1.0"
 MANUFACTURER: Final = "XGIMI"
 DEVICE_MODEL: Final = "Projector"
 
@@ -14,6 +14,7 @@ CONF_WAKE_BACKEND: Final = "wake_backend"
 CONF_ESP32_WAKE_ENTITY: Final = "esp32_wake_entity"
 CONF_BLUETOOTH_ADAPTER: Final = "bluetooth_adapter"
 CONF_ADVERTISEMENT_DURATION: Final = "advertisement_duration"
+CONF_DEBUG_LOGGING: Final = "debug_logging"
 
 WAKE_BACKEND_AUTO: Final = "auto"
 WAKE_BACKEND_LOCAL: Final = "local"
@@ -28,6 +29,7 @@ BLUETOOTH_ADAPTER_AUTO: Final = "automatic"
 
 DEFAULT_WAKE_BACKEND: Final = WAKE_BACKEND_AUTO
 DEFAULT_ADVERTISEMENT_DURATION: Final = 4.0
+DEFAULT_DEBUG_LOGGING: Final = False
 MIN_ADVERTISEMENT_DURATION: Final = 1.0
 MAX_ADVERTISEMENT_DURATION: Final = 10.0
 

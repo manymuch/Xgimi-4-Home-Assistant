@@ -61,42 +61,13 @@
   "options": {
     "step": {
       "init": {
-        "title": "Wake backend",
-        "description": "Choose how Home Assistant should transmit the BLE wake advertisement.",
+        "title": "XGIMI integration settings",
+        "description": "Configure optional diagnostics for XGIMI wake-up.",
         "data": {
-          "wake_backend": "Wake backend"
-        }
-      },
-      "auto": {
-        "title": "Automatic wake",
-        "description": "If an ESP32 wake button is selected, it will be preferred. Otherwise, a local advertising-capable Bluetooth adapter will be used.",
-        "data": {
-          "esp32_wake_entity": "ESP32 wake button",
-          "bluetooth_adapter": "Local Bluetooth adapter"
+          "debug_logging": "Enable debug logging"
         },
         "data_description": {
-          "esp32_wake_entity": "Optional ESPHome button that transmits the XGIMI advertisement.",
-          "bluetooth_adapter": "Only local BlueZ adapters with BLE advertising support are listed."
-        }
-      },
-      "local": {
-        "title": "Local Bluetooth wake",
-        "description": "Use a local BlueZ adapter exposed through the host system D-Bus.",
-        "data": {
-          "bluetooth_adapter": "Local Bluetooth adapter"
-        },
-        "data_description": {
-          "bluetooth_adapter": "Only local BlueZ adapters with BLE advertising support are listed."
-        }
-      },
-      "esp32": {
-        "title": "ESP32 wake",
-        "description": "A stock ESPHome Bluetooth Proxy is not sufficient. Select the dedicated button exposed by custom XGIMI advertising firmware.",
-        "data": {
-          "esp32_wake_entity": "ESP32 wake button"
-        },
-        "data_description": {
-          "esp32_wake_entity": "The button must transmit the device-specific XGIMI advertisement."
+          "debug_logging": "Log detailed ESP32 and BlueZ wake activity and collect extended adapter diagnostics. Disabled by default."
         }
       }
     },
@@ -115,6 +86,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "bluetooth_available": {
+        "name": "Bluetooth advertisement"
+      }
+    },
     "select": {
       "wake_backend": {
         "name": "Wake backend",
@@ -141,6 +117,11 @@
       "advertisement_duration": {
         "name": "Advertisement duration"
       }
+    },
+    "sensor": {
+      "bluetooth_diagnostics": {
+        "name": "Bluetooth device"
+      }
     }
   },
   "issues": {
@@ -154,7 +135,7 @@
     },
     "no_local_adapter": {
       "title": "No local advertising-capable Bluetooth adapter",
-      "description": "No local Bluetooth adapter with BLE advertising support was found. Check Settings → Devices & services → Bluetooth. Container installations also need the host BlueZ service, `/run/dbus:/run/dbus:ro`, `NET_ADMIN`, and `NET_RAW`."
+      "description": "No local Bluetooth adapter with BLE advertising support was found. BlueZ running by itself is not enough; attach a Bluetooth controller to the host and check Settings → Devices & services → Bluetooth. Container installations also need the host BlueZ service, `/run/dbus:/run/dbus:ro`, `NET_ADMIN`, and `NET_RAW`. If you use ESPHome wake-up instead, select the ESP32 backend and button in the projector device configuration."
     },
     "configured_adapter_missing": {
       "title": "The configured Bluetooth adapter is missing",

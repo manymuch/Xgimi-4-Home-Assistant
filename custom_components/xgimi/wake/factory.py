@@ -13,9 +13,11 @@ from ..const import (
     BLUETOOTH_ADAPTER_AUTO,
     CONF_ADVERTISEMENT_DURATION,
     CONF_BLUETOOTH_ADAPTER,
+    CONF_DEBUG_LOGGING,
     CONF_ESP32_WAKE_ENTITY,
     CONF_WAKE_BACKEND,
     DEFAULT_ADVERTISEMENT_DURATION,
+    DEFAULT_DEBUG_LOGGING,
     DEFAULT_WAKE_BACKEND,
     MAX_ADVERTISEMENT_DURATION,
     MIN_ADVERTISEMENT_DURATION,
@@ -41,6 +43,7 @@ class WakeBackendConfig:
     esp32_entity_id: str | None
     bluetooth_adapter: str
     advertisement_duration: float
+    debug_logging: bool
 
     @property
     def candidate_backend(self) -> str:
@@ -81,6 +84,9 @@ def wake_backend_config(entry: ConfigEntry) -> WakeBackendConfig:
 
     raw_entity_id = _entry_value(entry, CONF_ESP32_WAKE_ENTITY)
     entity_id = raw_entity_id.strip() if isinstance(raw_entity_id, str) else None
+    raw_debug_logging = _entry_value(
+        entry, CONF_DEBUG_LOGGING, DEFAULT_DEBUG_LOGGING
+    )
     return WakeBackendConfig(
         configured_backend=configured_backend,
         esp32_entity_id=entity_id or None,
@@ -88,6 +94,11 @@ def wake_backend_config(entry: ConfigEntry) -> WakeBackendConfig:
             entry, CONF_BLUETOOTH_ADAPTER, BLUETOOTH_ADAPTER_AUTO
         ),
         advertisement_duration=duration,
+        debug_logging=(
+            raw_debug_logging
+            if isinstance(raw_debug_logging, bool)
+            else DEFAULT_DEBUG_LOGGING
+        ),
     )
 
 
@@ -98,11 +109,16 @@ def create_wake_backend(
     """Construct the configured candidate without probing it."""
     config = wake_backend_config(entry)
     if config.candidate_backend == WAKE_BACKEND_ESP32:
-        return ESP32WakeBackend(hass, config.esp32_entity_id)
+        return ESP32WakeBackend(
+            hass,
+            config.esp32_entity_id,
+            debug_logging=config.debug_logging,
+        )
     return BlueZWakeBackend(
         entry.data[CONF_TOKEN],
         adapter_path=config.bluetooth_adapter,
         duration=config.advertisement_duration,
+        debug_logging=config.debug_logging,
     )
 
 

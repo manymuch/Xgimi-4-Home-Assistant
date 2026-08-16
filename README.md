@@ -65,6 +65,15 @@ The duration can be set from 1–10 seconds using the projector device's
 Advertisement duration configuration entity. This advanced entity is
 disabled by default.
 
+### Diagnostics and debug logging
+
+The integration options include **Enable debug logging**, disabled by default.
+When enabled, the integration logs the selected wake backend, ESPHome button
+validation and service-call result, BlueZ advertisement registration and
+cleanup, and D-Bus errors. It also includes extended adapter diagnostics for
+the BlueZ version, supported advertising features and includes, and controller
+advertising capabilities.
+
 #### Home Assistant OS
 
 1. Attach a Bluetooth adapter to the Home Assistant host.
@@ -248,10 +257,7 @@ the existing UDP implementation.
 
 ## Troubleshooting
 
-- Download integration diagnostics and inspect the effective backend, adapter
-  capacity, D-Bus/BlueZ availability, ESP32 entity availability, and last wake
-  result.
-- Review Settings → System → Repairs for persistent wake setup failures.
+- Enable debug logging and wownload integration diagnostics.
 - For Container, verify the host BlueZ service, `/run/dbus:/run/dbus:ro`,
   `NET_ADMIN`, and `NET_RAW`.
 - For ESP32, verify the dedicated wake button—not merely a Bluetooth Proxy—is
