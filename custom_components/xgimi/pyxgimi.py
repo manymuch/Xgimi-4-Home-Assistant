@@ -13,6 +13,7 @@ from .const import COMMAND_POWER_OFF, COMMAND_POWER_ON
 COMMAND_PORT: Final = 16735
 ADVANCED_COMMAND_PORT: Final = 16750
 REACHABILITY_PORT: Final = 554
+REACHABILITY_TIMEOUT: Final = 2.0
 
 
 class XgimiApi:
@@ -111,7 +112,10 @@ class XgimiApi:
     async def async_check_alive(self) -> bool:
         """Check projector reachability over its control-side TCP port."""
         try:
-            _, writer = await asyncio.open_connection(self.ip, self.alive_port)
+            _, writer = await asyncio.wait_for(
+                asyncio.open_connection(self.ip, self.alive_port),
+                timeout=REACHABILITY_TIMEOUT,
+            )
             writer.close()
             await writer.wait_closed()
             self._projector_reachable = True
