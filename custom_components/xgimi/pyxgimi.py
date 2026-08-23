@@ -1,22 +1,42 @@
-import asyncudp
+"""Asynchronous UDP client for XGIMI projectors."""
+
+from __future__ import annotations
+
 import asyncio
-from bluez_peripheral.util import get_message_bus
-from bluez_peripheral.advert import Advertisement
 from time import time
+from typing import Final
+
+import asyncudp
+
+from .const import COMMAND_POWER_OFF, COMMAND_POWER_ON
+
+COMMAND_PORT: Final = 16735
+ADVANCED_COMMAND_PORT: Final = 16750
+REACHABILITY_PORT: Final = 554
+REACHABILITY_TIMEOUT: Final = 2.0
 
 
 class XgimiApi:
-    def __init__(self, ip, command_port, advance_port, alive_port, manufacturer_data) -> None:
+    """Handle projector reachability and UDP commands only."""
+
+    def __init__(
+        self,
+        ip: str,
+        command_port: int = COMMAND_PORT,
+        advance_port: int = ADVANCED_COMMAND_PORT,
+        alive_port: int = REACHABILITY_PORT,
+    ) -> None:
+        """Initialize the projector API."""
         self.ip = ip
-        self.command_port = command_port  # 16735
-        self.advance_port = advance_port  # 16750
-        self.alive_port = alive_port  # 554
-        self.manufacturer_data = manufacturer_data
+        self.command_port = command_port
+        self.advance_port = advance_port
+        self.alive_port = alive_port
         self._is_on = False
         self.last_on = time()
         self.last_off = time()
+        self._projector_reachable: bool | None = None
 
-        self._command_dict = {
+        self._command_dict: dict[str, str] = {
             "ok": "KEYPRESSES:49",
             "play": "KEYPRESSES:49",
             "pause": "KEYPRESSES:49",
@@ -30,7 +50,7 @@ class XgimiApi:
             "down": "KEYPRESSES:38",
             "volumedown": "KEYPRESSES:114",
             "volumeup": "KEYPRESSES:115",
-            "poweroff": "KEYPRESSES:30",
+            COMMAND_POWER_OFF: "KEYPRESSES:30",
             "volumemute": "KEYPRESSES:113",
             "autofocus": "KEYPRESSES:2099",
             "autofocus_new": "KEYPRESSES:2103",
@@ -46,70 +66,80 @@ class XgimiApi:
             "hibernate": "KEYPRESSES:2106",
             "xmusic": "KEYPRESSES:2108",
         }
-        self._advance_command = str({"action": 20000, "controlCmd": {"data": "command_holder",
-                                    "delayTime": 0, "mode": 5, "time": 0, "type": 0}, "msgid": "2"})
+        self._advance_command = str(
+            {
+                "action": 20000,
+                "controlCmd": {
+                    "data": "command_holder",
+                    "delayTime": 0,
+                    "mode": 5,
+                    "time": 0,
+                    "type": 0,
+                },
+                "msgid": "2",
+            }
+        )
 
     @property
     def is_on(self) -> bool:
-        """Return true if the device is on."""
+        """Return whether the projector is considered on."""
         return self._is_on
 
-    async def async_fetch_data(self):
+    @property
+    def supported_commands(self) -> tuple[str, ...]:
+        """Return the command names accepted by the remote."""
+        return (COMMAND_POWER_ON, *self._command_dict)
+
+    @property
+    def projector_reachable(self) -> bool | None:
+        """Return the result of the most recent reachability check."""
+        return self._projector_reachable
+
+    def mark_wake_successful(self) -> None:
+        """Optimistically mark the projector on after wake succeeds."""
+        self._is_on = True
+        self.last_on = time()
+
+    async def async_fetch_data(self) -> None:
+        """Refresh projector state."""
         if time() - self.last_on < 30:
             self._is_on = True
         elif time() - self.last_off < 30:
             self._is_on = False
         else:
-            alive = await self.async_check_alive()
-            self._is_on = alive
+            self._is_on = await self.async_check_alive()
 
-    async def async_check_alive(self):
+    async def async_check_alive(self) -> bool:
+        """Check projector reachability over its control-side TCP port."""
         try:
-            _, writer = await asyncio.open_connection(
-                self.ip, self.alive_port)
+            _, writer = await asyncio.wait_for(
+                asyncio.open_connection(self.ip, self.alive_port),
+                timeout=REACHABILITY_TIMEOUT,
+            )
             writer.close()
             await writer.wait_closed()
-            return True
-        except ConnectionRefusedError:
-            return False
+            self._projector_reachable = True
         except Exception:
-            return False
+            self._projector_reachable = False
+        return self._projector_reachable
 
-    async def async_ble_power_on(self, manufacturer_data: str, company_id: int = 0x0046, service_uuid: str = "1812"):
-        bus = await get_message_bus()
-        advert = Advertisement(
-            localName="Bluetooth 4.0 RC",
-            serviceUUIDs=[service_uuid],
-            manufacturerData={company_id: bytes.fromhex(manufacturer_data)},
-            timeout=1,
-            duration=1000,
-            appearance=961,
-        )
-        await advert.register(bus)
+    async def async_send_command(self, command: str) -> None:
+        """Send a non-wake command to the projector over UDP."""
+        if command == COMMAND_POWER_ON:
+            raise ValueError("poweron must be handled by a wake backend")
 
-    async def async_robust_ble_power_on(self, manufacturer_data: str, company_id: int = 0x0046, service_uuid: str = "1812"):
-        for i in range(10):
-            await self.async_ble_power_on(manufacturer_data, company_id, service_uuid)
-            await asyncio.sleep(1)
-
-    async def async_send_command(self, command) -> None:
-        """Send a command to a device."""
         if command in self._command_dict:
-            if command == "poweroff":
+            if command == COMMAND_POWER_OFF:
                 self._is_on = False
                 self.last_off = time()
-            msg = self._command_dict[command]
-            remote_addr = (self.ip, self.command_port)
-            sock = await asyncudp.create_socket(remote_addr=remote_addr)
-            sock.sendto(msg.encode("utf-8"))
-            sock.close()
-        elif command == "poweron":
-            self._is_on = True
-            self.last_on = time()
-            await self.async_robust_ble_power_on(self.manufacturer_data)
+            message = self._command_dict[command]
+            remote_address = (self.ip, self.command_port)
         else:
-            msg = self._advance_command.replace("command_holder", command)
-            remote_addr = (self.ip, self.advance_port)
-            sock = await asyncudp.create_socket(remote_addr=remote_addr)
-            sock.sendto(msg.encode("utf-8"))
-            sock.close()
+            message = self._advance_command.replace("command_holder", command)
+            remote_address = (self.ip, self.advance_port)
+
+        socket = await asyncudp.create_socket(remote_addr=remote_address)
+        try:
+            socket.sendto(message.encode())
+        finally:
+            socket.close()
