@@ -64,9 +64,11 @@
         "title": "XGIMI integration settings",
         "description": "Configure optional diagnostics for XGIMI wake-up.",
         "data": {
+          "alive_port": "Reachability probe port",
           "debug_logging": "Enable debug logging"
         },
         "data_description": {
+          "alive_port": "TCP port used to detect whether the projector is powered on. Defaults to 554 (RTSP); some projector models expose a different port.",
           "debug_logging": "Log detailed ESP32 and BlueZ wake activity and collect extended adapter diagnostics. Disabled by default."
         }
       }

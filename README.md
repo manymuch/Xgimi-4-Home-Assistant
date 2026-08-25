@@ -67,8 +67,11 @@ disabled by default.
 
 ### Diagnostics and debug logging
 
-The integration options include **Enable debug logging**, disabled by default.
-When enabled, the integration logs the selected wake backend, ESPHome button
+The integration options include **Reachability probe port** and **Enable debug
+logging**. The reachability port defaults to `554` (RTSP) and is used to detect
+whether the projector is powered on; some models expose a different TCP port,
+which can be set here. When debug logging is enabled, the integration logs the
+selected wake backend, ESPHome button
 validation and service-call result, BlueZ advertisement registration and
 cleanup, and D-Bus errors. It also includes extended adapter diagnostics for
 the BlueZ version, supported advertising features and includes, and controller

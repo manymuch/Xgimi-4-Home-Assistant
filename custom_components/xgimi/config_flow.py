@@ -15,11 +15,13 @@ from homeassistant.util.network import is_host_valid
 from .const import (
     BLUETOOTH_ADAPTER_AUTO,
     CONF_ADVERTISEMENT_DURATION,
+    CONF_ALIVE_PORT,
     CONF_BLUETOOTH_ADAPTER,
     CONF_DEBUG_LOGGING,
     CONF_ESP32_WAKE_ENTITY,
     CONF_WAKE_BACKEND,
     DEFAULT_ADVERTISEMENT_DURATION,
+    DEFAULT_ALIVE_PORT,
     DEFAULT_WAKE_BACKEND,
     DOMAIN,
     ESP32_WAKE_ENTITY_DOMAIN,
@@ -245,6 +247,7 @@ class XgimiConfigFlow(
                     CONF_ADVERTISEMENT_DURATION,
                     DEFAULT_ADVERTISEMENT_DURATION,
                 )
+                options.setdefault(CONF_ALIVE_PORT, DEFAULT_ALIVE_PORT)
                 return self.async_create_entry(
                     title=self._core_data[CONF_NAME],
                     data=self._core_data,
@@ -287,6 +290,9 @@ class XgimiOptionsFlow(config_entries.OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Configure integration-level diagnostics."""
         current = wake_backend_config(self.config_entry)
+        current_alive_port = int(
+            self.config_entry.options.get(CONF_ALIVE_PORT, DEFAULT_ALIVE_PORT)
+        )
         if user_input is not None:
             options = dict(self.config_entry.options)
             options.setdefault(CONF_WAKE_BACKEND, current.configured_backend)
@@ -297,6 +303,7 @@ class XgimiOptionsFlow(config_entries.OptionsFlowWithReload):
                 CONF_ADVERTISEMENT_DURATION,
                 current.advertisement_duration,
             )
+            options[CONF_ALIVE_PORT] = user_input[CONF_ALIVE_PORT]
             options[CONF_DEBUG_LOGGING] = user_input[CONF_DEBUG_LOGGING]
             return self.async_create_entry(title="", data=options)
 
@@ -305,9 +312,19 @@ class XgimiOptionsFlow(config_entries.OptionsFlowWithReload):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
+                        CONF_ALIVE_PORT,
+                        default=current_alive_port,
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            mode=selector.NumberSelectorMode.BOX,
+                            min=1,
+                            max=65535,
+                        )
+                    ),
+                    vol.Optional(
                         CONF_DEBUG_LOGGING,
                         default=current.debug_logging,
-                    ): selector.BooleanSelector()
+                    ): selector.BooleanSelector(),
                 }
             ),
         )

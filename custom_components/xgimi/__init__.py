@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, WAKE_BACKEND_AUTO
+from .const import DOMAIN, CONF_ALIVE_PORT, DEFAULT_ALIVE_PORT, WAKE_BACKEND_AUTO
 from .pyxgimi import XgimiApi
 from .repairs import async_clear_wake_repairs, async_set_wake_repair
 from .runtime import XgimiRuntimeData
@@ -35,7 +35,10 @@ async def async_setup_entry(
 ) -> bool:
     """Set up an XGIMI config entry."""
     config = wake_backend_config(entry)
-    api = XgimiApi(ip=entry.data[CONF_HOST])
+    api = XgimiApi(
+        ip=entry.data[CONF_HOST],
+        alive_port=int(entry.options.get(CONF_ALIVE_PORT, DEFAULT_ALIVE_PORT)),
+    )
     wake_backend = create_wake_backend(hass, entry)
     effective_backend: str | None = config.candidate_backend
     setup_error: WakeBackendError | None = None

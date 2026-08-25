@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
-from typing import Any
+from typing import Any, Final
 
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -20,6 +21,9 @@ from .exceptions import (
 
 BUTTON_PRESS_SERVICE = "press"
 _LOGGER = logging.getLogger(__name__)
+
+PROBE_RETRIES: Final = 7
+PROBE_RETRY_DELAY: Final = 5.0
 
 
 class ESP32WakeBackend:
@@ -85,7 +89,24 @@ class ESP32WakeBackend:
         """Verify that the ESPHome wake button is available."""
         if self._closed:
             raise WakeBackendClosedError
-        self._get_state()
+
+        # ESPHome devices reconnect a few seconds after an HA restart, so the
+        # wake button may not exist yet. Retry briefly before raising a repair
+        # to avoid a spurious error during every restart.
+        probe_error: WakeBackendError | None = None
+        for attempt in range(PROBE_RETRIES):
+            try:
+                self._get_state()
+                probe_error = None
+                break
+            except WakeBackendError as err:
+                probe_error = err
+                if attempt + 1 < PROBE_RETRIES:
+                    await asyncio.sleep(PROBE_RETRY_DELAY)
+
+        if probe_error is not None:
+            raise probe_error
+
         self._log_debug("ESP32 wake probe completed successfully")
 
     async def async_wake(self) -> None:
