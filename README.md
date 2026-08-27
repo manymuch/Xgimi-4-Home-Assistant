@@ -67,10 +67,24 @@ disabled by default.
 
 ### Diagnostics and debug logging
 
-The integration options include **Reachability probe port** and **Enable debug
-logging**. The reachability port defaults to `554` (RTSP) and is used to detect
-whether the projector is powered on; some models expose a different TCP port,
-which can be set here. When debug logging is enabled, the integration logs the
+The integration options include **Reachability probe port**, **State refresh
+interval**, and **Enable debug logging**.
+
+The reachability port defaults to `554` (RTSP) and is used to detect whether the
+projector is powered on. If a projector does not expose the RTSP port, its power
+state is always reported as off. Depending on the model you can try:
+
+- `8080` — DLNA/HTTP media services (present on many XGIMI models)
+- `7100` — AirPlay
+
+Check which TCP port your projector listens on while powered on (for example
+with `nmap` or a port scan) and set it here.
+
+The state refresh interval defaults to `30` seconds and controls how often the
+integration probes the projector to update its power state. Lower it (minimum
+`5`) if you need faster detection of externally-triggered power changes.
+
+When debug logging is enabled, the integration logs the
 selected wake backend, ESPHome button
 validation and service-call result, BlueZ advertisement registration and
 cleanup, and D-Bus errors. It also includes extended adapter diagnostics for

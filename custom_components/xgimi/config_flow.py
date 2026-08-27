@@ -19,13 +19,17 @@ from .const import (
     CONF_BLUETOOTH_ADAPTER,
     CONF_DEBUG_LOGGING,
     CONF_ESP32_WAKE_ENTITY,
+    CONF_SCAN_INTERVAL,
     CONF_WAKE_BACKEND,
     DEFAULT_ADVERTISEMENT_DURATION,
     DEFAULT_ALIVE_PORT,
+    DEFAULT_SCAN_INTERVAL,
     DEFAULT_WAKE_BACKEND,
     DOMAIN,
     ESP32_WAKE_ENTITY_DOMAIN,
     MAX_MANUFACTURER_PAYLOAD_LENGTH,
+    MAX_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL,
     WAKE_BACKEND_AUTO,
     WAKE_BACKEND_ESP32,
     WAKE_BACKEND_LOCAL,
@@ -248,6 +252,7 @@ class XgimiConfigFlow(
                     DEFAULT_ADVERTISEMENT_DURATION,
                 )
                 options.setdefault(CONF_ALIVE_PORT, DEFAULT_ALIVE_PORT)
+                options.setdefault(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
                 return self.async_create_entry(
                     title=self._core_data[CONF_NAME],
                     data=self._core_data,
@@ -293,6 +298,11 @@ class XgimiOptionsFlow(config_entries.OptionsFlowWithReload):
         current_alive_port = int(
             self.config_entry.options.get(CONF_ALIVE_PORT, DEFAULT_ALIVE_PORT)
         )
+        current_scan_interval = int(
+            self.config_entry.options.get(
+                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+            )
+        )
         if user_input is not None:
             options = dict(self.config_entry.options)
             options.setdefault(CONF_WAKE_BACKEND, current.configured_backend)
@@ -304,6 +314,7 @@ class XgimiOptionsFlow(config_entries.OptionsFlowWithReload):
                 current.advertisement_duration,
             )
             options[CONF_ALIVE_PORT] = user_input[CONF_ALIVE_PORT]
+            options[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL]
             options[CONF_DEBUG_LOGGING] = user_input[CONF_DEBUG_LOGGING]
             return self.async_create_entry(title="", data=options)
 
@@ -319,6 +330,17 @@ class XgimiOptionsFlow(config_entries.OptionsFlowWithReload):
                             mode=selector.NumberSelectorMode.BOX,
                             min=1,
                             max=65535,
+                        )
+                    ),
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL,
+                        default=current_scan_interval,
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            mode=selector.NumberSelectorMode.BOX,
+                            min=MIN_SCAN_INTERVAL,
+                            max=MAX_SCAN_INTERVAL,
+                            unit_of_measurement="s",
                         )
                     ),
                     vol.Optional(
