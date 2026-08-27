@@ -22,7 +22,7 @@ from .exceptions import (
 BUTTON_PRESS_SERVICE = "press"
 _LOGGER = logging.getLogger(__name__)
 
-PROBE_RETRIES: Final = 7
+PROBE_RETRIES: Final = 12
 PROBE_RETRY_DELAY: Final = 5.0
 
 

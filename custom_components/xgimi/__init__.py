@@ -5,12 +5,17 @@ from __future__ import annotations
 from typing import Final
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, Platform
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import DOMAIN, CONF_ALIVE_PORT, DEFAULT_ALIVE_PORT, WAKE_BACKEND_AUTO
 from .pyxgimi import XgimiApi
-from .repairs import async_clear_wake_repairs, async_set_wake_repair
+from .repairs import (
+    async_clear_esp32_repairs,
+    async_clear_wake_repairs,
+    async_set_wake_repair,
+)
 from .runtime import XgimiRuntimeData
 from .wake.exceptions import NoWakeBackendAvailableError, WakeBackendError
 from .wake.factory import (
@@ -27,6 +32,37 @@ PLATFORMS: Final[list[Platform]] = [
 ]
 
 XgimiConfigEntry = ConfigEntry[XgimiRuntimeData]
+
+
+def _async_register_esp32_repair_recovery(
+    hass: HomeAssistant,
+    entry: XgimiConfigEntry,
+) -> None:
+    """Clear a stale ESP32 repair once the wake button becomes available.
+
+    ESPHome devices can take longer than the startup probe window to
+    reconnect after an HA restart. When the configured button finally
+    becomes available, remove the stale repair instead of leaving it on
+    screen until the next reload.
+    """
+    config = wake_backend_config(entry)
+    if config.esp32_entity_id is None:
+        return
+
+    @callback
+    def _async_on_button_change(event: Event) -> None:
+        new_state = event.data.get("new_state")
+        if new_state is None or new_state.state == STATE_UNAVAILABLE:
+            return
+        async_clear_esp32_repairs(hass, entry.entry_id)
+        unsub()
+
+    unsub = async_track_state_change_event(
+        hass,
+        config.esp32_entity_id,
+        _async_on_button_change,
+    )
+    entry.async_on_unload(unsub)
 
 
 async def async_setup_entry(
@@ -81,6 +117,8 @@ async def async_setup_entry(
         await runtime.async_close()
         hass.data[DOMAIN].pop(entry.entry_id, None)
         raise
+
+    _async_register_esp32_repair_recovery(hass, entry)
     return True
 
 

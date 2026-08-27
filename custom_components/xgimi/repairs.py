@@ -41,6 +41,12 @@ def async_clear_wake_repairs(hass: HomeAssistant, entry_id: str) -> None:
         ir.async_delete_issue(hass, DOMAIN, _issue_id(entry_id, repair_key))
 
 
+def async_clear_esp32_repairs(hass: HomeAssistant, entry_id: str) -> None:
+    """Delete stale ESP32 wake-button repair issues for an entry."""
+    for repair_key in (REPAIR_ESP32_ENTITY_MISSING, REPAIR_ESP32_ENTITY_UNAVAILABLE):
+        ir.async_delete_issue(hass, DOMAIN, _issue_id(entry_id, repair_key))
+
+
 def _repair_key_for_error(error: WakeBackendError) -> str:
     """Map a wake exception to a repair translation key."""
     if isinstance(error, NoWakeBackendAvailableError):
