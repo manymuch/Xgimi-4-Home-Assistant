@@ -3,163 +3,109 @@
     "step": {
       "user": {
         "title": "Configure XGIMI projector",
-        "description": "Enter the projector network details and choose an initial wake backend. The token is used only for BLE wake-up.",
+        "description": "Enter the projector name and host, then choose the wake backend.",
         "data": {
           "name": "Projector name",
           "host": "Projector host or IP address",
-          "token": "BLE token",
           "wake_backend": "Wake backend"
         },
         "data_description": {
-          "token": "Hexadecimal manufacturer-data value from key 70; do not include the key itself.",
-          "wake_backend": "Automatic prefers a configured ESP32 wake button, then tries a local advertising-capable Bluetooth adapter."
-        }
-      },
-      "auto": {
-        "title": "Configure automatic wake",
-        "description": "If an ESP32 wake button is selected, it will be preferred. Otherwise, a local advertising-capable Bluetooth adapter will be used.",
-        "data": {
-          "esp32_wake_entity": "ESP32 wake button",
-          "bluetooth_adapter": "Local Bluetooth adapter"
-        },
-        "data_description": {
-          "esp32_wake_entity": "Optional ESPHome button that transmits the XGIMI advertisement.",
-          "bluetooth_adapter": "Only local BlueZ adapters with BLE advertising support are listed."
+          "wake_backend": "Choose Local Bluetooth for this Home Assistant host, or ESP32 to press a Home Assistant button. The backend cannot be changed after setup."
         }
       },
       "local": {
         "title": "Configure local Bluetooth wake",
-        "description": "Use the Home Assistant host's BlueZ service and system D-Bus. Home Assistant Container must mount /run/dbus and have suitable Bluetooth capabilities.",
+        "description": "Enter the projector BLE token and choose a concrete local adapter that supports BLE advertising.",
         "data": {
+          "token": "BLE token",
           "bluetooth_adapter": "Local Bluetooth adapter"
         },
         "data_description": {
-          "bluetooth_adapter": "Only local BlueZ adapters with BLE advertising support are listed."
+          "token": "Hexadecimal manufacturer-data value from key 70; do not include the key itself.",
+          "bluetooth_adapter": "Only discovered local adapters with BLE advertising support are listed."
         }
       },
       "esp32": {
         "title": "Configure ESP32 wake",
-        "description": "Select a dedicated ESPHome button that sends the XGIMI advertisement. A stock ESPHome Bluetooth Proxy cannot send arbitrary BLE advertisements.",
+        "description": "Choose any Home Assistant button or input button entity. Turning on the projector presses this button once.",
         "data": {
-          "esp32_wake_entity": "ESP32 wake button"
+          "wake_button": "Wake button"
         },
         "data_description": {
-          "esp32_wake_entity": "The button must be provided by custom ESPHome firmware configured with this projector's token."
+          "wake_button": "The selected button is called with button.press or input_button.press. The integration does not inspect its state or require ESPHome."
         }
       }
     },
     "error": {
-      "entity_missing": "The selected button entity does not exist.",
-      "entity_unsupported": "The ESP32 wake entity must be a button entity.",
       "invalid_host": "The hostname or IP address is invalid.",
-      "invalid_token": "The token must be 1–16 bytes of hexadecimal data."
+      "invalid_backend": "Choose a supported wake backend.",
+      "invalid_token": "The token must be 1–16 bytes of hexadecimal data.",
+      "invalid_adapter": "Choose one of the discovered advertising-capable adapters.",
+      "invalid_button": "Choose a Home Assistant button or input button entity."
     },
     "abort": {
-      "already_configured": "This projector is already configured."
+      "already_configured": "This projector is already configured.",
+      "no_local_adapter": "No advertising-capable local Bluetooth adapter was found. Check the host Bluetooth service and adapter, or choose ESP32."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "XGIMI integration settings",
-        "description": "Configure optional diagnostics for XGIMI wake-up.",
+        "description": "Configure common settings and the options for the selected wake backend.",
         "data": {
           "alive_port": "Reachability probe port",
           "scan_interval": "State refresh interval",
-          "debug_logging": "Enable debug logging"
+          "debug_logging": "Enable debug logging",
+          "bluetooth_adapter": "Local Bluetooth adapter",
+          "advertisement_duration": "Advertisement duration",
+          "ble_increment": "Increment the BLE token counter",
+          "wake_button": "Wake button"
         },
         "data_description": {
-          "alive_port": "TCP port used to detect whether the projector is powered on. Defaults to 554 (RTSP); some projector models expose a different port, such as 8080 (DLNA) or 7100 (AirPlay).",
+          "alive_port": "TCP port used to detect whether the projector is powered on. Defaults to 554.",
           "scan_interval": "How often the projector power state is refreshed, in seconds. Defaults to 30.",
-          "debug_logging": "Log detailed ESP32 and BlueZ wake activity and collect extended adapter diagnostics. Disabled by default."
+          "debug_logging": "Log detailed wake and local BlueZ activity. Disabled by default.",
+          "bluetooth_adapter": "Choose a discovered local adapter with BLE advertising support.",
+          "advertisement_duration": "How long each local Bluetooth advertisement is registered, from 1 to 10 seconds.",
+          "ble_increment": "When enabled, the first send uses the configured token; each later send increments byte 0 modulo 256. The counter is memory-only and resets after restart.",
+          "wake_button": "The selected Home Assistant button is pressed once for each wake request."
         }
       }
     },
     "error": {
-      "entity_missing": "The selected button entity does not exist.",
-      "entity_unsupported": "The ESP32 wake entity must be a button entity."
+      "invalid_adapter": "Choose one of the discovered advertising-capable adapters.",
+      "invalid_button": "Choose a Home Assistant button or input button entity."
     }
   },
   "selector": {
     "wake_backend": {
       "options": {
-        "auto": "Automatic",
         "local": "Local Bluetooth",
-        "esp32": "ESP32 / ESPHome"
-      }
-    }
-  },
-  "entity": {
-    "binary_sensor": {
-      "bluetooth_available": {
-        "name": "Bluetooth advertisement"
-      }
-    },
-    "select": {
-      "wake_backend": {
-        "name": "Wake backend",
-        "state": {
-          "auto": "Automatic",
-          "local": "Local Bluetooth",
-          "esp32": "ESP32 / ESPHome"
-        }
-      },
-      "esp32_wake_entity": {
-        "name": "ESPHome wake button",
-        "state": {
-          "__none__": "No ESPHome button"
-        }
-      },
-      "bluetooth_adapter": {
-        "name": "Bluetooth adapter",
-        "state": {
-          "automatic": "Automatic"
-        }
-      }
-    },
-    "number": {
-      "advertisement_duration": {
-        "name": "Advertisement duration"
-      }
-    },
-    "sensor": {
-      "bluetooth_diagnostics": {
-        "name": "Bluetooth device"
+        "esp32": "ESP32"
       }
     }
   },
   "issues": {
     "dbus_unavailable": {
       "title": "System D-Bus is unavailable",
-      "description": "The local wake backend cannot connect to system D-Bus. For Home Assistant Container, run BlueZ on the Docker host, mount `/run/dbus:/run/dbus:ro`, and add `NET_ADMIN` and `NET_RAW`. Do not run a second bluetoothd in the container."
+      "description": "The local wake backend cannot connect to system D-Bus. For Home Assistant Container, mount `/run/dbus:/run/dbus:ro` from the Docker host and add `NET_ADMIN` and `NET_RAW`."
     },
     "bluez_unavailable": {
       "title": "The host BlueZ service is unavailable",
-      "description": "Start the host BlueZ service and verify that Home Assistant can access it through system D-Bus. Container installations need `/run/dbus:/run/dbus:ro`, `NET_ADMIN`, and `NET_RAW`."
+      "description": "Start the host BlueZ service and verify that Home Assistant can access it through system D-Bus."
     },
     "no_local_adapter": {
       "title": "No local advertising-capable Bluetooth adapter",
-      "description": "No local Bluetooth adapter with BLE advertising support was found. BlueZ running by itself is not enough; attach a Bluetooth controller to the host and check Settings → Devices & services → Bluetooth. Container installations also need the host BlueZ service, `/run/dbus:/run/dbus:ro`, `NET_ADMIN`, and `NET_RAW`. If you use ESPHome wake-up instead, select the ESP32 backend and button in the projector device configuration."
+      "description": "No local Bluetooth adapter with BLE advertising support was found. Attach a Bluetooth controller to the host and check Settings → Devices & services → Bluetooth."
     },
     "configured_adapter_missing": {
       "title": "The configured Bluetooth adapter is missing",
-      "description": "The selected local adapter is no longer present or no longer supports BLE advertising. Reconnect it, or choose Automatic or another adapter in the integration options."
-    },
-    "esp32_entity_missing": {
-      "title": "The ESP32 wake button is missing",
-      "description": "The selected ESPHome wake button is missing or unavailable. Check the ESP32 device, Wi-Fi connection, and ESPHome integration, then select the button again."
-    },
-    "esp32_entity_unavailable": {
-      "title": "The ESP32 wake button is unavailable",
-      "description": "The selected ESPHome wake button is missing or unavailable. Check the ESP32 device, Wi-Fi connection, and ESPHome integration."
-    },
-    "no_backend_available": {
-      "title": "No XGIMI wake backend is available",
-      "description": "Configure a custom ESPHome XGIMI wake button, or connect a local Bluetooth adapter that supports BLE advertising. A stock ESPHome Bluetooth Proxy is not an advertising backend."
+      "description": "The selected local adapter is no longer present or no longer supports BLE advertising. Reconnect it or choose another concrete adapter in the integration options."
     },
     "wake_backend_failure": {
-      "title": "The XGIMI wake backend failed",
-      "description": "The selected wake backend could not transmit the advertisement. Check the integration diagnostics and wake backend configuration."
+      "title": "The local Bluetooth wake backend failed",
+      "description": "The local wake backend could not transmit the advertisement. Check the integration diagnostics and local Bluetooth configuration."
     }
   }
 }

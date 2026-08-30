@@ -2,69 +2,110 @@
   "config": {
     "step": {
       "user": {
-        "title": "Xgimi Projector Remote",
-        "description": "在配置之前，请确保电视已经打开。",
+        "title": "配置 XGIMI 投影仪",
+        "description": "请输入投影仪名称和主机地址，然后选择唤醒后端。",
         "data": {
-          "name": "电视名称",
-          "host": "电视 IP",
-          "token": "蓝牙 Token"
+          "name": "投影仪名称",
+          "host": "投影仪 IP 或主机名",
+          "wake_backend": "唤醒后端"
+        },
+        "data_description": {
+          "wake_backend": "为当前 Home Assistant 主机选择本地蓝牙，或选择 ESP32 来按下 Home Assistant 按钮。配置后不能更换后端。"
+        }
+      },
+      "local": {
+        "title": "配置本地蓝牙唤醒",
+        "description": "请输入投影仪蓝牙开机token，并选择一个支持 BLE 广播的具体本地蓝牙设备。",
+        "data": {
+          "token": "蓝牙开机token",
+          "bluetooth_adapter": "本地蓝牙设备"
+        },
+        "data_description": {
+          "token": "来自 key 70 的十六进制 manufacturer-data 值；不要包含 key 本身。",
+          "bluetooth_adapter": "这里只列出已发现且支持 BLE 广播的本地蓝牙设备。"
+        }
+      },
+      "esp32": {
+        "title": "配置 ESP32 唤醒",
+        "description": "选择任意 Home Assistant 按钮或输入按钮实体。打开投影仪时会按下此按钮一次。",
+        "data": {
+          "wake_button": "唤醒按钮"
+        },
+        "data_description": {
+          "wake_button": "集成会调用 button.press 或 input_button.press。不会检查按钮状态，也不要求使用 ESPHome。"
         }
       }
     },
     "error": {
-      "invalid_host": "IP错误",
-      "cannot_connect": "连接设备失败"
+      "invalid_host": "主机名或 IP 地址无效。",
+      "invalid_backend": "请选择受支持的唤醒后端。",
+      "invalid_token": "token 必须是 1–16 字节的十六进制数据。",
+      "invalid_adapter": "请选择已发现且支持 BLE 广播的设备。",
+      "invalid_button": "请选择 Home Assistant 按钮或输入按钮实体。"
     },
     "abort": {
-      "already_configured": "该设备已经配置过"
+      "already_configured": "此投影仪已经配置。",
+      "no_local_adapter": "未找到支持 BLE 广播的本地蓝牙设备。请检查主机蓝牙服务和设备，或选择 ESP32。"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "XGIMI 集成设置",
+        "description": "配置通用设置以及所选唤醒后端的选项。",
+        "data": {
+          "alive_port": "开机状态检测端口",
+          "scan_interval": "状态刷新间隔",
+          "debug_logging": "启用调试日志",
+          "bluetooth_adapter": "本地蓝牙设备",
+          "advertisement_duration": "广播持续时间",
+          "ble_increment": "蓝牙开机token自动递增",
+          "wake_button": "唤醒按钮"
+        },
+        "data_description": {
+          "alive_port": "用于检测投影仪是否开机的 TCP 端口。默认值为 554。",
+          "scan_interval": "刷新投影仪电源状态的间隔（秒）。默认值为 30。",
+          "debug_logging": "记录详细的唤醒和本地 BlueZ 活动。默认关闭。",
+          "bluetooth_adapter": "选择已发现且支持 BLE 广播的本地蓝牙设备。",
+          "advertisement_duration": "每次本地蓝牙广播的注册时间，范围为 1 到 10 秒。",
+          "ble_increment": "启用后，第一次发送使用配置的蓝牙开机token，之后每次发送将第 0 字节按 256 取模递增。计数器仅保存在内存中，重启后重置。",
+          "wake_button": "每次请求唤醒时按下一次所选的 Home Assistant 按钮。"
+        }
+      }
+    },
+    "error": {
+      "invalid_adapter": "请选择已发现且支持 BLE 广播的设备。",
+      "invalid_button": "请选择 Home Assistant 按钮或输入按钮实体。"
     }
   },
   "selector": {
     "wake_backend": {
       "options": {
-        "auto": "自动",
         "local": "本地蓝牙",
-        "esp32": "ESP32 / ESPHome"
+        "esp32": "ESP32"
       }
     }
   },
-  "entity": {
-    "binary_sensor": {
-      "bluetooth_available": {
-        "name": "蓝牙广播"
-      }
+  "issues": {
+    "dbus_unavailable": {
+      "title": "系统 D-Bus 不可用",
+      "description": "本地唤醒后端无法连接系统 D-Bus。使用 Home Assistant Container 时，请从主机挂载 /run/dbus:/run/dbus:ro，并添加 NET_ADMIN 和 NET_RAW。"
     },
-    "select": {
-      "wake_backend": {
-        "name": "唤醒后端",
-        "state": {
-          "auto": "自动",
-          "local": "本地蓝牙",
-          "esp32": "ESP32 / ESPHome"
-        }
-      },
-      "esp32_wake_entity": {
-        "name": "ESPHome 唤醒按钮",
-        "state": {
-          "__none__": "不使用 ESPHome 按钮"
-        }
-      },
-      "bluetooth_adapter": {
-        "name": "蓝牙适配器",
-        "state": {
-          "automatic": "自动"
-        }
-      }
+    "bluez_unavailable": {
+      "title": "主机 BlueZ 服务不可用",
+      "description": "请启动主机上的 BlueZ，并确认 Home Assistant 可以通过系统 D-Bus 访问它。"
     },
-    "number": {
-      "advertisement_duration": {
-        "name": "广播持续时间"
-      }
+    "no_local_adapter": {
+      "title": "没有支持 BLE 广播的本地蓝牙设备",
+      "description": "未找到支持 BLE 广播的本地蓝牙设备。请将蓝牙设备连接到主机，并检查设置 → 设备与服务 → 蓝牙。"
     },
-    "sensor": {
-      "bluetooth_diagnostics": {
-        "name": "蓝牙设备"
-      }
+    "configured_adapter_missing": {
+      "title": "找不到已配置的蓝牙设备",
+      "description": "所选本地蓝牙设备已不存在或不再支持 BLE 广播。请重新连接，或在集成选项中选择其他具体设备。"
+    },
+    "wake_backend_failure": {
+      "title": "本地蓝牙唤醒后端失败",
+      "description": "本地唤醒后端无法发送广播。请检查集成诊断和本地蓝牙配置。"
     }
   }
 }

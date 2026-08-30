@@ -63,8 +63,8 @@ class ConfiguredAdapterMissingError(WakeBackendError):
 
     error_code = "configured_adapter_missing"
     default_message = (
-        "The configured local Bluetooth adapter is missing. Select Automatic "
-        "or another advertising-capable adapter."
+        "The configured local Bluetooth adapter is missing. Select another "
+        "advertising-capable adapter in the integration options."
     )
 
 
@@ -118,50 +118,8 @@ class AdapterRemovedError(WakeBackendError):
     default_message = "The selected Bluetooth adapter was removed during advertising."
 
 
-class ESP32WakeEntityMissingError(WakeBackendError):
-    """The configured ESP32 wake entity is missing."""
+class WakeButtonServiceError(WakeBackendError):
+    """Home Assistant could not press the configured wake button."""
 
-    error_code = "esp32_entity_missing"
-    default_message = (
-        "The selected ESPHome wake button is missing. Check the ESP32 device "
-        "and the integration options."
-    )
-
-
-class ESP32WakeEntityUnavailableError(WakeBackendError):
-    """The configured ESP32 wake entity is unavailable."""
-
-    error_code = "esp32_entity_unavailable"
-    default_message = (
-        "The selected ESPHome wake button is unavailable. Check the ESP32 "
-        "device, Wi-Fi connection, and ESPHome integration."
-    )
-
-
-class ESP32WakeEntityDomainError(WakeBackendError):
-    """The configured entity is not a supported domain."""
-
-    error_code = "esp32_entity_unsupported_domain"
-    default_message = "The ESP32 wake entity must be a button entity."
-
-
-class ESP32WakeServiceError(WakeBackendError):
-    """Home Assistant could not press the ESP32 wake button."""
-
-    error_code = "esp32_service_call_failed"
-    default_message = "Home Assistant could not press the ESPHome wake button."
-
-
-class NoWakeBackendAvailableError(WakeBackendError):
-    """Neither local nor ESP32 wake is available."""
-
-    error_code = "no_wake_backend_available"
-    default_message = (
-        "No wake backend is available. Configure an ESPHome wake button or "
-        "connect a local Bluetooth adapter that supports BLE advertising."
-    )
-
-    def __init__(self, cause: WakeBackendError | None = None) -> None:
-        """Initialize the error and retain a safe underlying cause."""
-        super().__init__()
-        self.cause = cause
+    error_code = "wake_button_service_failed"
+    default_message = "Home Assistant could not press the configured wake button."

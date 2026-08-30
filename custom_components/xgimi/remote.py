@@ -19,8 +19,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     COMMAND_POWER_OFF,
     COMMAND_POWER_ON,
-    CONF_SCAN_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
 )
 from .entity import xgimi_device_info
 from .runtime import XgimiRuntimeData
@@ -73,13 +71,7 @@ class XgimiRemote(RemoteEntity):
     @property
     def _scan_interval(self) -> timedelta:
         """Return the configured state refresh interval."""
-        interval = DEFAULT_SCAN_INTERVAL
-        entry = self.runtime.config_entry
-        if entry is not None:
-            interval = int(
-                entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-            )
-        return timedelta(seconds=interval)
+        return timedelta(seconds=self.runtime.scan_interval)
 
     @property
     def is_on(self) -> bool:
@@ -126,7 +118,7 @@ class XgimiRemote(RemoteEntity):
         if self.runtime.debug_logging:
             _LOGGER.info(
                 "Debug: XGIMI wake requested backend=%s",
-                self.runtime.effective_wake_backend,
+                self.runtime.configured_wake_backend,
             )
         try:
             await self.runtime.async_wake()
