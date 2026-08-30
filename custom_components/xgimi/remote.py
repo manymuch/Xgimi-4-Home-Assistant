@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
+from datetime import timedelta
 from typing import Any
 
 from homeassistant.components.remote import RemoteEntity
@@ -13,8 +14,14 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 
-from .const import COMMAND_POWER_OFF, COMMAND_POWER_ON
+from .const import (
+    COMMAND_POWER_OFF,
+    COMMAND_POWER_ON,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+)
 from .entity import xgimi_device_info
 from .runtime import XgimiRuntimeData
 from .wake.exceptions import WakeBackendError
@@ -46,6 +53,7 @@ class XgimiRemote(RemoteEntity):
     """Representation of an XGIMI projector remote."""
 
     _attr_icon = "mdi:projector"
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -60,6 +68,18 @@ class XgimiRemote(RemoteEntity):
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
+        self._unsub_interval: Callable[[], None] | None = None
+
+    @property
+    def _scan_interval(self) -> timedelta:
+        """Return the configured state refresh interval."""
+        interval = DEFAULT_SCAN_INTERVAL
+        entry = self.runtime.config_entry
+        if entry is not None:
+            interval = int(
+                entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+            )
+        return timedelta(seconds=interval)
 
     @property
     def is_on(self) -> bool:
@@ -75,6 +95,27 @@ class XgimiRemote(RemoteEntity):
     def extra_state_attributes(self) -> dict[str, list[str]]:
         """Return read-only command metadata for automations and diagnostics."""
         return {"supported_commands": list(self.supported_commands)}
+
+    async def async_added_to_hass(self) -> None:
+        """Schedule configurable state polling."""
+        await super().async_added_to_hass()
+        self._unsub_interval = async_track_time_interval(
+            self.hass,
+            self._async_refresh,
+            self._scan_interval,
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove the state polling timer."""
+        if self._unsub_interval is not None:
+            self._unsub_interval()
+            self._unsub_interval = None
+        await super().async_will_remove_from_hass()
+
+    async def _async_refresh(self, *_: Any) -> None:
+        """Periodically refresh the projector power state."""
+        await self.async_update()
+        self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Retrieve the latest projector state."""

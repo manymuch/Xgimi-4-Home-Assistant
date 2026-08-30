@@ -32,8 +32,11 @@ class XgimiApi:
         self.advance_port = advance_port
         self.alive_port = alive_port
         self._is_on = False
-        self.last_on = time()
-        self.last_off = time()
+        # Start with no grace window so the first poll reflects the real
+        # projector state after a restart or a config-entry reload instead of
+        # reporting a stale "on" for the first 30 seconds.
+        self.last_on = 0
+        self.last_off = 0
         self._projector_reachable: bool | None = None
 
         self._command_dict: dict[str, str] = {
