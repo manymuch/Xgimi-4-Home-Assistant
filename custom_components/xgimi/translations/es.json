@@ -2,69 +2,110 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configura la información de la TV",
-        "description": "Por favor, has de estar seguro que tu TV está encendida antes de intentar configurarla.",
+        "title": "Configurar proyector XGIMI",
+        "description": "Introduce el nombre y el host del proyector y elige el backend de activación.",
         "data": {
-          "name": "Nombre de la TV",
-          "host": "Nombre del host/IP de la TV",
-          "token": "Token de BLE"
+          "name": "Nombre del proyector",
+          "host": "Host o dirección IP del proyector",
+          "wake_backend": "Backend de activación"
+        },
+        "data_description": {
+          "wake_backend": "Elige Bluetooth local para este host de Home Assistant o ESP32 para pulsar un botón de Home Assistant. El backend no se puede cambiar después de la configuración."
+        }
+      },
+      "local": {
+        "title": "Configurar activación por Bluetooth local",
+        "description": "Introduce el token BLE del proyector y elige un adaptador local concreto compatible con publicidad BLE.",
+        "data": {
+          "token": "Token BLE",
+          "bluetooth_adapter": "Adaptador Bluetooth local"
+        },
+        "data_description": {
+          "token": "Valor hexadecimal de manufacturer-data de la clave 70; no incluyas la clave.",
+          "bluetooth_adapter": "Solo aparecen adaptadores locales descubiertos compatibles con publicidad BLE."
+        }
+      },
+      "esp32": {
+        "title": "Configurar activación ESP32",
+        "description": "Elige cualquier entidad de botón o botón de entrada de Home Assistant. Encender el proyector pulsará este botón una vez.",
+        "data": {
+          "wake_button": "Botón de activación"
+        },
+        "data_description": {
+          "wake_button": "La entidad seleccionada se llama con button.press o input_button.press. La integración no comprueba su estado ni requiere ESPHome."
         }
       }
     },
     "error": {
-      "invalid_host": "Nombre del host o dirección IP inválidos",
-      "cannot_connect": "Ha fallado la conexión"
+      "invalid_host": "El nombre de host o la dirección IP no son válidos.",
+      "invalid_backend": "Elige un backend de activación compatible.",
+      "invalid_token": "El token debe contener entre 1 y 16 bytes hexadecimales.",
+      "invalid_adapter": "Elige uno de los adaptadores descubiertos compatibles con publicidad BLE.",
+      "invalid_button": "Elige una entidad de botón o botón de entrada de Home Assistant."
     },
     "abort": {
-      "already_configured": "El dispositivo está ya configurado"
+      "already_configured": "Este proyector ya está configurado.",
+      "no_local_adapter": "No se encontró un adaptador Bluetooth local compatible con publicidad BLE. Comprueba el servicio y el adaptador Bluetooth del host o elige ESP32."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ajustes de la integración XGIMI",
+        "description": "Configura los ajustes comunes y los del backend de activación seleccionado.",
+        "data": {
+          "alive_port": "Puerto de comprobación de accesibilidad",
+          "scan_interval": "Intervalo de actualización del estado",
+          "debug_logging": "Activar registro de depuración",
+          "bluetooth_adapter": "Adaptador Bluetooth local",
+          "advertisement_duration": "Duración de la publicidad",
+          "ble_increment": "Incrementar el contador del token BLE",
+          "wake_button": "Botón de activación"
+        },
+        "data_description": {
+          "alive_port": "Puerto TCP usado para detectar si el proyector está encendido. El valor predeterminado es 554.",
+          "scan_interval": "Frecuencia de actualización del estado del proyector, en segundos. El valor predeterminado es 30.",
+          "debug_logging": "Registra actividad detallada de activación y BlueZ local. Está desactivado de forma predeterminada.",
+          "bluetooth_adapter": "Elige un adaptador local descubierto compatible con publicidad BLE.",
+          "advertisement_duration": "Tiempo que se registra cada anuncio Bluetooth local, entre 1 y 10 segundos.",
+          "ble_increment": "Al activarlo, el primer envío usa el token configurado y cada envío posterior incrementa el byte 0 módulo 256. El contador solo está en memoria y se reinicia al reiniciar Home Assistant.",
+          "wake_button": "El botón de Home Assistant seleccionado se pulsa una vez por cada solicitud de activación."
+        }
+      }
+    },
+    "error": {
+      "invalid_adapter": "Elige uno de los adaptadores descubiertos compatibles con publicidad BLE.",
+      "invalid_button": "Elige una entidad de botón o botón de entrada de Home Assistant."
     }
   },
   "selector": {
     "wake_backend": {
       "options": {
-        "auto": "Automático",
         "local": "Bluetooth local",
-        "esp32": "ESP32 / ESPHome"
+        "esp32": "ESP32"
       }
     }
   },
-  "entity": {
-    "binary_sensor": {
-      "bluetooth_available": {
-        "name": "Anuncio Bluetooth"
-      }
+  "issues": {
+    "dbus_unavailable": {
+      "title": "D-Bus del sistema no está disponible",
+      "description": "El backend local no puede conectarse al D-Bus del sistema. En Home Assistant Container, monta /run/dbus:/run/dbus:ro desde el host y añade NET_ADMIN y NET_RAW."
     },
-    "select": {
-      "wake_backend": {
-        "name": "Backend de activación",
-        "state": {
-          "auto": "Automático",
-          "local": "Bluetooth local",
-          "esp32": "ESP32 / ESPHome"
-        }
-      },
-      "esp32_wake_entity": {
-        "name": "Botón de activación ESPHome",
-        "state": {
-          "__none__": "Sin botón ESPHome"
-        }
-      },
-      "bluetooth_adapter": {
-        "name": "Adaptador Bluetooth",
-        "state": {
-          "automatic": "Automático"
-        }
-      }
+    "bluez_unavailable": {
+      "title": "El servicio BlueZ del host no está disponible",
+      "description": "Inicia BlueZ en el host y comprueba que Home Assistant pueda acceder mediante D-Bus del sistema."
     },
-    "number": {
-      "advertisement_duration": {
-        "name": "Duración del anuncio"
-      }
+    "no_local_adapter": {
+      "title": "No hay un adaptador Bluetooth local compatible con publicidad",
+      "description": "No se encontró un adaptador Bluetooth local compatible con publicidad BLE. Conecta un controlador Bluetooth al host y comprueba Ajustes → Dispositivos y servicios → Bluetooth."
     },
-    "sensor": {
-      "bluetooth_diagnostics": {
-        "name": "Dispositivo Bluetooth"
-      }
+    "configured_adapter_missing": {
+      "title": "Falta el adaptador Bluetooth configurado",
+      "description": "El adaptador local seleccionado ya no está presente o ya no admite publicidad BLE. Vuelve a conectarlo o elige otro adaptador concreto en las opciones."
+    },
+    "wake_backend_failure": {
+      "title": "Ha fallado el backend Bluetooth local",
+      "description": "El backend local no ha podido transmitir la publicidad. Comprueba los diagnósticos y la configuración Bluetooth local."
     }
   }
 }

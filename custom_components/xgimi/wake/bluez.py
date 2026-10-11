@@ -18,7 +18,6 @@ from dbus_fast.errors import DBusError
 from dbus_fast.service import ServiceInterface, dbus_property, method
 
 from ..const import (
-    BLUETOOTH_ADAPTER_AUTO,
     MAX_MANUFACTURER_PAYLOAD_LENGTH,
     WAKE_BACKEND_LOCAL,
     XGIMI_APPEARANCE,
@@ -361,28 +360,19 @@ def _select_adapter(
     }
     capable_adapters = _all_adapters(managed_objects)
 
-    if requested_path != BLUETOOTH_ADAPTER_AUTO:
-        matching = next(
-            (adapter for adapter in capable_adapters if adapter.path == requested_path),
-            None,
-        )
-        if matching is not None:
-            if not matching.has_free_instance:
-                raise NoAdvertisingInstanceError
-            return matching
-        if requested_path in local_adapter_paths:
-            raise AdvertisingUnsupportedError
-        raise ConfiguredAdapterMissingError
-
+    matching = next(
+        (adapter for adapter in capable_adapters if adapter.path == requested_path),
+        None,
+    )
+    if matching is not None:
+        if not matching.has_free_instance:
+            raise NoAdvertisingInstanceError
+        return matching
+    if requested_path in local_adapter_paths:
+        raise AdvertisingUnsupportedError
     if not local_adapter_paths and not capable_adapters:
         raise NoLocalAdapterError
-    if not capable_adapters:
-        raise AdvertisingUnsupportedError
-
-    for adapter in capable_adapters:
-        if adapter.has_free_instance:
-            return adapter
-    raise NoAdvertisingInstanceError
+    raise ConfiguredAdapterMissingError
 
 
 async def async_discover_bluez_adapters(
@@ -405,8 +395,9 @@ class BlueZWakeBackend:
         self,
         token: str,
         *,
-        adapter_path: str = BLUETOOTH_ADAPTER_AUTO,
+        adapter_path: str,
         duration: float = 4.0,
+        incremental: bool = False,
         debug_logging: bool = False,
         bus_factory: BusFactory = _default_bus_factory,
     ) -> None:
@@ -414,6 +405,8 @@ class BlueZWakeBackend:
         self._token = token
         self.adapter_path = adapter_path
         self.duration = duration
+        self.incremental = incremental
+        self._counter: int | None = None
         self._debug_logging = debug_logging
         self._bus_factory = bus_factory
         self._lock = asyncio.Lock()
@@ -444,6 +437,17 @@ class BlueZWakeBackend:
             raise InvalidAdvertisementDataError
         return payload
 
+    def _payload_for_send(self) -> bytes:
+        """Return the next BLE payload, optionally advancing its first byte."""
+        payload = self._manufacturer_payload()
+        if not self.incremental:
+            return payload
+        if self._counter is None:
+            self._counter = payload[0]
+        next_payload = bytes((self._counter,)) + payload[1:]
+        self._counter = (self._counter + 1) % 256
+        return next_payload
+
     async def _async_connect_and_select(
         self,
     ) -> tuple[_MessageBusLike, BlueZAdapter]:
@@ -460,18 +464,6 @@ class BlueZWakeBackend:
             self._bluez_available = True
             capable_adapters = _all_adapters(managed_objects)
             self._advertising_supported = bool(capable_adapters)
-            if capable_adapters:
-                if self.adapter_path == BLUETOOTH_ADAPTER_AUTO:
-                    self._selected_adapter = capable_adapters[0]
-                else:
-                    self._selected_adapter = next(
-                        (
-                            adapter
-                            for adapter in capable_adapters
-                            if adapter.path == self.adapter_path
-                        ),
-                        None,
-                    )
             adapter = _select_adapter(managed_objects, self.adapter_path)
         except BaseException:
             with suppress(Exception):
@@ -625,7 +617,7 @@ class BlueZWakeBackend:
             if self._closed:
                 raise WakeBackendClosedError
 
-            payload = self._manufacturer_payload()
+            payload = self._payload_for_send()
             bus, adapter = await self._async_connect_and_select()
             released = asyncio.Event()
             advertisement = XgimiAdvertisement(payload, released)
@@ -700,6 +692,7 @@ class BlueZWakeBackend:
         adapter = self._selected_adapter
         return {
             "debug_logging": self._debug_logging,
+            "ble_increment": self.incremental,
             "dbus_available": self._dbus_available,
             "bluez_available": self._bluez_available,
             "selected_adapter": adapter.path if adapter else None,
