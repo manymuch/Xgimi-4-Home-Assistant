@@ -6,7 +6,7 @@ from typing import Final
 
 DOMAIN: Final = "xgimi"
 NAME: Final = "XGIMI Projector Remote"
-VERSION: Final = "1.1.3"
+VERSION: Final = "1.1.4"
 MANUFACTURER: Final = "XGIMI"
 DEVICE_MODEL: Final = "Projector"
 
@@ -43,6 +43,11 @@ XGIMI_SERVICE_UUID: Final = "00001812-0000-1000-8000-00805f9b34fb"
 XGIMI_MANUFACTURER_ID: Final = 0x0046
 XGIMI_APPEARANCE: Final = 961
 MAX_MANUFACTURER_PAYLOAD_LENGTH: Final = 16
+# Advertising interval in milliseconds. The original remote bursts at ~20 ms;
+# BlueZ otherwise falls back to the kernel default of 1.28 s, which a
+# projector in standby can miss entirely.
+XGIMI_ADV_MIN_INTERVAL_MS: Final = 20
+XGIMI_ADV_MAX_INTERVAL_MS: Final = 30
 
 COMMAND_POWER_ON: Final = "poweron"
 COMMAND_POWER_OFF: Final = "poweroff"

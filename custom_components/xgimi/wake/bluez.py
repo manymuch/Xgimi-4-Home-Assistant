@@ -20,6 +20,8 @@ from dbus_fast.service import ServiceInterface, dbus_property, method
 from ..const import (
     MAX_MANUFACTURER_PAYLOAD_LENGTH,
     WAKE_BACKEND_LOCAL,
+    XGIMI_ADV_MAX_INTERVAL_MS,
+    XGIMI_ADV_MIN_INTERVAL_MS,
     XGIMI_APPEARANCE,
     XGIMI_LOCAL_NAME,
     XGIMI_MANUFACTURER_ID,
@@ -165,6 +167,16 @@ class XgimiAdvertisement(ServiceInterface):
     def tx_power(self) -> "n":  # noqa: F821
         """Return the requested advertisement transmit power."""
         return 0
+
+    @dbus_property(access=PropertyAccess.READ, name="MinInterval")
+    def min_interval(self) -> "u":  # noqa: F821
+        """Return the minimum advertising interval in milliseconds."""
+        return XGIMI_ADV_MIN_INTERVAL_MS
+
+    @dbus_property(access=PropertyAccess.READ, name="MaxInterval")
+    def max_interval(self) -> "u":  # noqa: F821
+        """Return the maximum advertising interval in milliseconds."""
+        return XGIMI_ADV_MAX_INTERVAL_MS
 
     @method(name="Release")
     def release(self) -> None:
