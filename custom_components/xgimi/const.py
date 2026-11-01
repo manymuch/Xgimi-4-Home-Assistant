@@ -6,7 +6,7 @@ from typing import Final
 
 DOMAIN: Final = "xgimi"
 NAME: Final = "XGIMI Projector Remote"
-VERSION: Final = "1.1.3"
+VERSION: Final = "1.1.4"
 MANUFACTURER: Final = "XGIMI"
 DEVICE_MODEL: Final = "Projector"
 
