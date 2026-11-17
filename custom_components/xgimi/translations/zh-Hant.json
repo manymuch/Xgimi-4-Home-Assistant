@@ -1,0 +1,111 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "設定 XGIMI 投影機",
+        "description": "請輸入投影機名稱與主機，然後選擇喚醒後端。",
+        "data": {
+          "name": "投影機名稱",
+          "host": "投影機主機或 IP 位址",
+          "wake_backend": "喚醒後端"
+        },
+        "data_description": {
+          "wake_backend": "可選擇本機藍牙（使用此 Home Assistant 主機），或選擇 ESP32（按下 Home Assistant 按鈕）。設定完成後無法變更後端。"
+        }
+      },
+      "local": {
+        "title": "設定本機藍牙喚醒",
+        "description": "請輸入投影機的 BLE 權杖，並選擇支援 BLE 廣播的本機介面卡。",
+        "data": {
+          "token": "BLE 權杖",
+          "bluetooth_adapter": "本機藍牙介面卡"
+        },
+        "data_description": {
+          "token": "來自鍵 70 的十六進位製造商資料值；請勿包含鍵本身。",
+          "bluetooth_adapter": "僅列出已偵測到且支援 BLE 廣播的本機介面卡。"
+        }
+      },
+      "esp32": {
+        "title": "設定 ESP32 喚醒",
+        "description": "請選擇任一 Home Assistant 按鈕或輸入按鈕實體。開啟投影機時會按下此按鈕一次。",
+        "data": {
+          "wake_button": "喚醒按鈕"
+        },
+        "data_description": {
+          "wake_button": "所選按鈕會透過 button.press 或 input_button.press 呼叫。此整合不會檢查其狀態，也不需要 ESPHome。"
+        }
+      }
+    },
+    "error": {
+      "invalid_host": "主機名稱或 IP 位址無效。",
+      "invalid_backend": "請選擇支援的喚醒後端。",
+      "invalid_token": "權杖必須為 1 至 16 位元組的十六進位資料。",
+      "invalid_adapter": "請選擇已偵測到且支援廣播的介面卡之一。",
+      "invalid_button": "請選擇 Home Assistant 按鈕或輸入按鈕實體。"
+    },
+    "abort": {
+      "already_configured": "此投影機已設定完成。",
+      "no_local_adapter": "找不到支援廣播的本機藍牙介面卡。請檢查主機的藍牙服務與介面卡，或改選 ESP32。"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "XGIMI 整合設定",
+        "description": "設定一般選項，以及所選喚醒後端的專屬選項。",
+        "data": {
+          "alive_port": "連線偵測連接埠",
+          "scan_interval": "狀態更新間隔",
+          "debug_logging": "啟用偵錯記錄",
+          "bluetooth_adapter": "本機藍牙介面卡",
+          "advertisement_duration": "廣播持續時間",
+          "ble_increment": "遞增 BLE 權杖計數器",
+          "wake_button": "喚醒按鈕"
+        },
+        "data_description": {
+          "alive_port": "用於偵測投影機是否已開機的 TCP 連接埠。預設為 554。",
+          "scan_interval": "投影機電源狀態的更新頻率，單位為秒。預設為 30。",
+          "debug_logging": "記錄詳細的喚醒與本機 BlueZ 活動。預設為停用。",
+          "bluetooth_adapter": "請選擇已偵測到且支援 BLE 廣播的本機介面卡。",
+          "advertisement_duration": "每次本機藍牙廣播的註冊持續時間，範圍為 1 至 10 秒。",
+          "ble_increment": "啟用後，第一次傳送會使用已設定的權杖；之後每次傳送會將位元組 0 遞增（以 256 為模數）。計數器僅存在記憶體中，重新啟動後會重置。",
+          "wake_button": "每次喚醒請求都會按下所選的 Home Assistant 按鈕一次。"
+        }
+      }
+    },
+    "error": {
+      "invalid_adapter": "請選擇已偵測到且支援廣播的介面卡之一。",
+      "invalid_button": "請選擇 Home Assistant 按鈕或輸入按鈕實體。"
+    }
+  },
+  "selector": {
+    "wake_backend": {
+      "options": {
+        "local": "本機藍牙",
+        "esp32": "ESP32"
+      }
+    }
+  },
+  "issues": {
+    "dbus_unavailable": {
+      "title": "無法使用系統 D-Bus",
+      "description": "本機喚醒後端無法連線至系統 D-Bus。若使用 Home Assistant Container，請從 Docker 主機掛載 `/run/dbus:/run/dbus:ro`，並加入 `NET_ADMIN` 與 `NET_RAW`。"
+    },
+    "bluez_unavailable": {
+      "title": "無法使用主機的 BlueZ 服務",
+      "description": "請啟動主機的 BlueZ 服務，並確認 Home Assistant 能透過系統 D-Bus 存取它。"
+    },
+    "no_local_adapter": {
+      "title": "沒有支援廣播的本機藍牙介面卡",
+      "description": "找不到支援 BLE 廣播的本機藍牙介面卡。請將藍牙控制器連接至主機，並檢查「設定 → 裝置與服務 → 藍牙」。"
+    },
+    "configured_adapter_missing": {
+      "title": "已設定的藍牙介面卡遺失",
+      "description": "所選的本機介面卡已不存在，或不再支援 BLE 廣播。請重新連接，或在整合選項中選擇其他介面卡。"
+    },
+    "wake_backend_failure": {
+      "title": "本機藍牙喚醒後端失敗",
+      "description": "本機喚醒後端無法傳送廣播。請檢查整合的診斷資訊與本機藍牙設定。"
+    }
+  }
+}
